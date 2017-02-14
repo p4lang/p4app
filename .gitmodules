@@ -1,0 +1,3 @@
+[submodule "mininet"]
+	path = docker/third-party/mininet
+	url = https://github.com/mininet/mininet.git

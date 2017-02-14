@@ -1,0 +1,14 @@
+{
+  "program": "simple_counter.p4",
+  "language": "p4-14",
+  "targets": {
+    "stf": {
+      "test": "simple_counter.stf"
+    },
+    "debug": {
+      "use": "mininet",
+      "num_hosts": 2,
+      "switch_config": "simple_counter.config"
+    }
+  }
+}

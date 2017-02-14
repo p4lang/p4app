@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+P4APP_IMAGE=p4app:latest
+
+function run-p4app {
+  APP_TO_RUN=/tmp/app.tar.gz
+  docker run --privileged --interactive --tty --rm -v $1:$APP_TO_RUN \
+             $P4APP_IMAGE $APP_TO_RUN "${@:2}"
+  exit $?
+}
+
+function run-command {
+  # Run the .p4app package provided by the user.
+  if [ -d "$1" ]; then
+    # The user passed the package as a directory. Tar it up and pass it to the
+    # container.
+    APP_FILE=$(mktemp /tmp/p4app.tar.gz.XXXXXX)
+    tar -czf "$APP_FILE" -C "$1" .
+    run-p4app "$APP_FILE" "${@:2}"
+    rm "$APP_FILE"
+  elif [ -f "$1" ]; then
+    # The user passed the package as a file. We'll assume it's already a .tar.gz
+    # archive; just pass it to the container as-is.
+    run-p4app "$1" "${@:2}"
+  else
+    echo "Couldn't read p4app package: $1"
+    exit 1
+  fi
+}
+
+function update-command {
+  # XXX(seth): For now, rebuild the docker image. Once we have automated builds
+  # enabled, this should just do a `docker pull`.
+  docker build -t $P4APP_IMAGE .
+}
+
+function usage-command {
+  echo "Usage:"
+  echo "  p4app run <program.p4app>"
+  echo "      Run a p4app."
+  echo "  p4app run <program.p4app> <target>"
+  echo "      Run a p4app, specifying a target."
+  echo "  p4app update"
+  echo "      Update the toolchain to the newest version."
+  exit 1
+}
+
+case "$1" in
+  "run")
+    run-command "${@:2}"
+    ;;
+  "update")
+    update-command "${@:2}"
+    ;;
+  *)
+    usage-command
+    ;;
+esac
