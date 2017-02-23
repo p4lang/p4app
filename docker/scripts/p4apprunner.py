@@ -150,11 +150,11 @@ def run_mininet(manifest):
 
     switch_args.append('--cli-message "%s"' % message_file)
 
-    if 'num_hosts' in manifest.target_config:
-        switch_args.append('--num-hosts %s' % manifest.target_config['num_hosts'])
+    if 'num-hosts' in manifest.target_config:
+        switch_args.append('--num-hosts %s' % manifest.target_config['num-hosts'])
 
-    if 'switch_config' in manifest.target_config:
-        switch_args.append('--switch-config "%s"' % manifest.target_config['switch_config'])
+    if 'switch-config' in manifest.target_config:
+        switch_args.append('--switch-config "%s"' % manifest.target_config['switch-config'])
 
     switch_args.append('--behavioral-exe "%s"' % 'simple_switch')
     switch_args.append('--json "%s"' % output_file)
