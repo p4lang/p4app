@@ -28,15 +28,9 @@ Special note for early access users
 
 If you're reading this right now, you're an early access user. =)
 
-There are two gotchas to be aware of right now. The first is that we don't have
-automated builds for the Docker image for this repo yet, so after you clone it,
-you'll need to manually run `./p4app update` once, which will build an image for
-you locally.
-
-The second gotcha is that a small patch was necessary to the BMV2 Dockerfile to
-enable the use of the BMV2 debugger in the p4app Mininet backend, and it hasn't
-been merged yet. It'll start working sometime tomorrow, but to get access to it,
-you'll probably have to update this repo and rerun `./p4app update`.
+We don't have automated builds for the Docker image for this repo yet. That
+means that after you clone it, you'll need to manually run `./p4app update`
+once, which will build an image for you locally.
 
 Usage
 -----

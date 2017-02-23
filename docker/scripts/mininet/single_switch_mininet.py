@@ -61,6 +61,7 @@ class SingleSwitchTopo(Topo):
                                 log_console = True,
                                 log_file = log_file,
                                 thrift_port = thrift_port,
+                                enable_debugger = True,
                                 pcap_dump = pcap_dump)
 
         for h in xrange(n):
