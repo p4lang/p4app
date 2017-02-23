@@ -1,5 +1,5 @@
 {
-  "program": "p4src/acceptor.p4",
+  "program": "acceptor.p4",
   "language": "p4-16",
   "targets": {
     "acceptor": { "use": "stf", "test": "acceptor.stf" },
