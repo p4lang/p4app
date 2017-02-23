@@ -75,9 +75,9 @@ def run_compile_bmv2(manifest):
     compiler_args = []
 
     if manifest.language == 'p4-14':
-        compiler_args.append('--p4-14')
+        compiler_args.append('--p4v 14')
     elif manifest.language == 'p4-16':
-        compiler_args.append('--p4-16')
+        compiler_args.append('--p4v 16')
     else:
         log_error('Unknown language:', manifest.language)
         sys.exit(1)
