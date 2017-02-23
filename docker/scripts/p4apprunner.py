@@ -28,6 +28,10 @@ def log(*items):
 def log_error(*items):
     print(*items, file=sys.stderr)
 
+def run_command(command):
+    log('>', command)
+    return os.system(command)
+
 class Manifest:
     def __init__(self, program_file, language, target, target_config):
         self.program_file = program_file
@@ -59,19 +63,46 @@ def read_manifest(manifest_file):
     log_error('Target not found in manifest:', args.target)
     sys.exit(1)
 
-def compile_for_bmv2(manifest):
-    # Compile the program.
+def run_compile_bmv2(manifest):
+    if 'run-before-compile' in manifest.target_config:
+        commands = manifest.target_config['run-before-compile']
+        if not isinstance(commands, list):
+            log_error('run-before-compile should be a list:', commands)
+            sys.exit(1)
+        for command in commands:
+            run_command(command)
+
+    compiler_args = []
+
     if manifest.language == 'p4-14':
-        language_option = '--p4-14'
+        compiler_args.append('--p4-14')
     elif manifest.language == 'p4-16':
-        language_option = '--p4-16'
+        compiler_args.append('--p4-16')
     else:
         log_error('Unknown language:', manifest.language)
         sys.exit(1)
 
+    if 'compiler-flags' in manifest.target_config:
+        flags = manifest.target_config['compiler-flags']
+        if not isinstance(flags, list):
+            log_error('compiler-flags should be a list:', flags)
+            sys.exit(1)
+        compiler_args.extend(flags)
+
+    # Compile the program.
     output_file = manifest.program_file + '.json'
-    rv = os.system('p4c-bm2-ss %s "%s" -o "%s"'
-                     % (language_option, manifest.program_file, output_file))
+    compiler_args.append('"%s"' % manifest.program_file)
+    compiler_args.append('-o "%s"' % output_file)
+    rv = run_command('p4c-bm2-ss %s' % ' '.join(compiler_args))
+
+    if 'run-after-compile' in manifest.target_config:
+        commands = manifest.target_config['run-after-compile']
+        if not isinstance(commands, list):
+            log_error('run-after-compile should be a list:', commands)
+            sys.exit(1)
+        for command in commands:
+            run_command(command)
+
     if rv != 0:
         log_error('Compile failed.')
         sys.exit(1)
@@ -79,7 +110,7 @@ def compile_for_bmv2(manifest):
     return output_file
 
 def run_mininet(manifest):
-    output_file = compile_for_bmv2(manifest)
+    output_file = run_compile_bmv2(manifest)
 
     # Run the program using the BMV2 Mininet simple switch.
     switch_args = []
@@ -129,10 +160,10 @@ def run_mininet(manifest):
     switch_args.append('--json "%s"' % output_file)
 
     program = '"%s/mininet/single_switch_mininet.py"' % sys.path[0]
-    os.system('python2 %s %s' % (program, ' '.join(switch_args)))
+    run_command('python2 %s %s' % (program, ' '.join(switch_args)))
 
 def run_stf(manifest):
-    output_file = compile_for_bmv2(manifest)
+    output_file = run_compile_bmv2(manifest)
 
     if not 'test' in manifest.target_config:
         log_error('No STF test file provided.')
@@ -146,7 +177,7 @@ def run_stf(manifest):
     stf_args.append(os.path.join(args.build_dir, stf_file))
 
     program = '"%s/stf/bmv2stf.py"' % sys.path[0]
-    rv = os.system('python2 %s %s' % (program, ' '.join(stf_args)))
+    rv = run_command('python2 %s %s' % (program, ' '.join(stf_args)))
     if rv != 0:
         sys.exit(1)
 
@@ -174,6 +205,8 @@ def main():
         run_mininet(manifest)
     elif backend == 'stf':
         run_stf(manifest)
+    elif backend == 'compile-bmv2':
+        run_compile_bmv2(manifest)
     else:
         log_error('Target specifies unknown backend:', backend)
         sys.exit(1)

@@ -1,0 +1,10 @@
+{
+  "program": "compile_only.p4",
+  "language": "p4-14",
+  "targets": {
+    "compile-bmv2": {
+      "compiler-flags": ["-v", "--p4runtime-file out.bin", "--p4runtime-as-json"],
+      "run-after-compile": ["cat out.bin"]
+    }
+  }
+}
