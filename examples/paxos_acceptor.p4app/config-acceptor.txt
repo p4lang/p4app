@@ -1,0 +1,5 @@
+table_add transport_tbl set_UDPdstPort 0 => 34954
+table_add forward_tbl forward 0 => 1
+table_add acceptor_tbl handle_1a 0 =>
+table_add acceptor_tbl handle_2a 2 =>
+register_write registerAcceptorID 0 1

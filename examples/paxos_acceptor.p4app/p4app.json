@@ -1,0 +1,8 @@
+{
+  "program": "p4src/acceptor.p4",
+  "language": "p4-16",
+  "targets": {
+    "acceptor": { "use": "stf", "test": "acceptor.stf" },
+    "debug": { "use": "mininet", "num_hosts": 2, "switch_config": "config-acceptor.txt" }
+  }
+}
