@@ -108,8 +108,8 @@ run a P4 program; it's comparable to a Makefile. Here's one looks:
   "language": "p4-14",
   "targets": {
     "mininet": {
-      "num_hosts": 2,
-      "switch_config": "my_program.config"
+      "num-hosts": 2,
+      "switch-config": "my_program.config"
     }
   }
 }
@@ -132,7 +132,7 @@ will run the first target in the list. Here's an example with several targets:
   "program": "my_program.p4",
   "language": "p4-14",
   "targets": {
-    "debug": { "use": "mininet", "num_hosts": 2 },
+    "debug": { "use": "mininet", "num-hosts": 2 },
     "test1": { "use": "stf", "test": "test1.stf" },
     "test2": { "use": "stf", "test": "test2.stf" },
   }
@@ -151,9 +151,73 @@ p4app can work transparently with compressed packages - just give it a `.p4app`
 extension, and everything will work.
 
 Backends
---------
+========
 
-The backends are, unfortunately, currently undocumented. The STF test format
-should be pretty easy to pick up.  Mininet switch configuration files are just a
-sequence of commands for the BMV2 simple_switch_CLI. You can probably poke
-around and discover the rest.
+mininet
+-------
+
+This backend compiles a P4 program, loads it into a BMV2
+[simple_switch](https://github.com/p4lang/behavioral-model/blob/master/docs/simple_switch.md),
+and creates a Mininet environment that lets you experiment with it.
+
+The following optional configuration values are supported:
+
+```
+"mininet": {
+  "num-hosts": 2,
+  "switch-config": "file.config"
+}
+```
+
+All are optional.
+
+The Mininet network will use a star topology, with `num-hosts` hosts each
+connected to your switch via a separate interface.
+
+You can load a configuration into your switch at startup using `switch-config`;
+the file format is just a sequence of commands for the BMV2
+[simple_switch_CLI](https://github.com/p4lang/behavioral-model#using-the-cli-to-populate-tables).
+
+During startup, messages will be displayed telling you information about the
+network configuration and about how to access logging and debugging facilities.
+The BMV2 debugger is especially handy; you can read up on how to use it
+[here](https://github.com/p4lang/behavioral-model/blob/master/docs/p4dbg_user_guide.md).
+
+This target also supports the configuration values for the `compile-bvm2` target.
+
+stf
+---
+
+This target compiles the provided P4 program and run a test against it written
+for the STF testing framework.
+
+There is one configuration value, which is required:
+
+```
+"stf": {
+  "test": "file.stf"
+}
+```
+
+You must write the file specified by `test` in the STF format, which is
+unfortunately currently undocumented. (If you'd like to reverse engineer it and
+provide some documentation, please submit a PR!) You can take a look at the
+example p4apps included in this repo to get a sense of the basics.
+
+This target also supports the configuration values for the `compile-bvm2` target.
+
+compile-bmv2
+------------
+
+This is a simple backend that just attempts to compile the provided P4 program
+for the BMV2 architecture.
+
+The following optional configuration values are supported:
+
+```
+"compile-bmv2": {
+  "compiler-flags": ["-v", "-E"],
+  "run-before-compile": ["date"],
+  "run-after-compile": ["date"]
+}
+```
