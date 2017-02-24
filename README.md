@@ -1,7 +1,7 @@
 p4app
 =====
 
-p4app is a tool that that can build, run, debug, and test P4 programs.
+p4app is a tool that can build, run, debug, and test P4 programs.
 The philosophy behind p4app is "easy things should be easy" - p4app is designed
 to make small, simple P4 programs easy to write and easy to share with others.
 
