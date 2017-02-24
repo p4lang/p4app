@@ -5,10 +5,6 @@ p4app is a tool that that can build, run, debug, and test P4 programs.
 The philosophy behind p4app is "easy things should be easy" - p4app is designed
 to make small, simple P4 programs easy to write and easy to share with others.
 
-This repository has submodules, so make sure you clone it with
-`git clone --recursive`. If you forgot, it's OK - just run
-`git submodule update --init --recursive`, and you'll be in business.
-
 Installation
 ------------
 
@@ -22,15 +18,6 @@ Installation
     ```
 
 That's it! You're done. 
-
-Special note for early access users
------------------------------------
-
-If you're reading this right now, you're an early access user. =)
-
-We don't have automated builds for the Docker image for this repo yet. That
-means that after you clone it, you'll need to manually run `./p4app update`
-once, which will build an image for you locally.
 
 Usage
 -----
