@@ -1,9 +1,9 @@
 p4app
 =====
 
-p4app is a tool that can build, run, debug, and test P4 programs.
-The philosophy behind p4app is "easy things should be easy" - p4app is designed
-to make small, simple P4 programs easy to write and easy to share with others.
+p4app is a tool that can build, run, debug, and test P4 programs. The
+philosophy behind p4app is "easy things should be easy" - p4app is designed to
+make small, simple P4 programs easy to write and easy to share with others.
 
 Installation
 ------------
@@ -36,9 +36,9 @@ p4app run examples/simple_router.p4app
 
 If you run this command, you'll find yourself at a Mininet command prompt. p4app
 will automatically download a Docker image containing the P4 compiler and tools,
-compile `simpler_router.p4`, and set up a container with a simulated network
-you can use to experiment. In addition to Mininet itself, you can use `tshark`
-and the net-tools and nmap suites right out of the box.
+compile `simpler_router.p4`, and set up a container with a simulated network you
+can use to experiment. In addition to Mininet itself, you can use `tshark`,
+`scapy`, and the net-tools and nmap suites right out of the box.
 
 Mininet isn't the only backend that p4app supports, though. Here's another
 example p4app:
@@ -126,11 +126,11 @@ will run the first target in the list. Here's an example with several targets:
 }
 ```
 
-This defines one Mininet target and two STF targets. The `use` field specifies
-which backend a target uses; if you don't provide it, the default is to use the
-backend with the same name as the name of the target. That's why, in the
-previous example, we didn't have to specify `"use": "mininet"` - the target's
-name is mininet, and that's enough for p4app to know what you mean.
+This defines one Mininet target, "debug", and two STF targets, "test1" and
+"test2". The `use` field specifies which backend a target uses; if you don't
+provide it, the target name is also used as the backend name. That's why, in
+the previous example, we didn't have to specify `"use": "mininet"` - the
+target's name is mininet, and that's enough for p4app to know what you mean.
 
 That's really all there is to it. There's one final tip: if you want to share a
 p4app package with someone else, you can just tar and gzip the whole directory.
