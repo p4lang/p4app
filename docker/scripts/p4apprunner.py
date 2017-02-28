@@ -43,7 +43,9 @@ def log_error(*items):
 
 def run_command(command):
     log('>', command)
-    return os.system(command)
+    exit_status = os.system(command)
+    rc = exit_status >> 8
+    return rc
 
 class Manifest:
     def __init__(self, program_file, language, target, target_config):
@@ -173,7 +175,21 @@ def run_mininet(manifest):
     switch_args.append('--json "%s"' % output_file)
 
     program = '"%s/mininet/single_switch_mininet.py"' % sys.path[0]
-    run_command('python2 %s %s' % (program, ' '.join(switch_args)))
+    return run_command('python2 %s %s' % (program, ' '.join(switch_args)))
+
+def run_mininet2(manifest):
+    output_file = run_compile_bmv2(manifest)
+
+    script_args = []
+    script_args.append('--log-dir "/tmp/p4app_logs"')
+    script_args.append('--manifest "p4app.json"')
+    script_args.append('--target "%s"' % manifest.target)
+    script_args.append('--behavioral-exe "%s"' % 'simple_switch')
+    script_args.append('--json "%s"' % output_file)
+    #script_args.append('--cli')
+
+    program = '"%s/mininet/multi_switch_mininet.py"' % sys.path[0]
+    return run_command('python2 %s %s' % (program, ' '.join(script_args)))
 
 def run_stf(manifest):
     output_file = run_compile_bmv2(manifest)
@@ -193,6 +209,7 @@ def run_stf(manifest):
     rv = run_command('python2 %s %s' % (program, ' '.join(stf_args)))
     if rv != 0:
         sys.exit(1)
+    return rv
 
 def main():
     log('Entering build directory.')
@@ -215,14 +232,19 @@ def main():
         backend = manifest.target_config['use']
 
     if backend == 'mininet':
-        run_mininet(manifest)
+        rc = run_mininet(manifest)
+    elif backend == 'mininet2':
+        rc = run_mininet2(manifest)
     elif backend == 'stf':
-        run_stf(manifest)
+        rc = run_stf(manifest)
     elif backend == 'compile-bmv2':
         run_compile_bmv2(manifest)
+        rc = 0
     else:
         log_error('Target specifies unknown backend:', backend)
         sys.exit(1)
+
+    sys.exit(rc)
 
 if __name__ == '__main__':
     main()

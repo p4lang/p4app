@@ -17,9 +17,10 @@ P4APP_IMAGE=p4lang/p4app:latest
 
 function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
-  docker run --privileged --interactive --tty --rm -v $1:$APP_TO_RUN \
+  docker run --privileged --interactive --tty --rm \
+            -v $1:$APP_TO_RUN \
+            -v /tmp/p4app_logs:/tmp/p4app_logs \
              $P4APP_IMAGE $APP_TO_RUN "${@:2}"
-  exit $?
 }
 
 function run-command {
@@ -30,15 +31,18 @@ function run-command {
     APP_FILE=$(mktemp /tmp/p4app.tar.gz.XXXXXX)
     tar -czf "$APP_FILE" -C "$1" .
     run-p4app "$APP_FILE" "${@:2}"
+    rc=$?
     rm "$APP_FILE"
   elif [ -f "$1" ]; then
     # The user passed the package as a file. We'll assume it's already a .tar.gz
     # archive; just pass it to the container as-is.
     run-p4app "$1" "${@:2}"
+    rc=$?
   else
     echo "Couldn't read p4app package: $1"
     exit 1
   fi
+  exit $rc
 }
 
 function update-command {
