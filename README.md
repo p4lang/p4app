@@ -172,6 +172,72 @@ The BMV2 debugger is especially handy; you can read up on how to use it
 
 This target also supports the configuration values for the `compile-bvm2` target.
 
+multiswitch
+-----------
+
+Like `mininet`, this target compiles a P4 program and runs it in a Mininet
+environment. Moreover, this target allows you to run multiple switches with a
+custom topology and execute arbitrary commands on the hosts. The switches are
+automatically configured with l2 and l3 rules for routing traffic to all hosts
+(this assumes that the P4 programs have the `ipv4_lpm`, `send_frame` and
+`forward` tables). For example:
+
+```
+"multiswitch": {
+  "links": [
+    ["h1", "s1"],
+    ["s1", "s2"],
+    ["s2", "h2", 50]
+  ],
+  "hosts": {
+    "h1": {
+        "cmd": "python echo_server.py %port%",
+        "startup_sleep": 0.2,
+        "wait": false
+    },
+    "h2": {
+        "cmd": "python echo_client.py h1 %port% %echo_msg%",
+        "wait": true
+    }
+  }
+}
+
+...
+
+"parameters": {
+   "port": 8000,
+   "echo_msg": "foobar"
+}
+```
+
+This configuration will create a topology like this:
+
+```
+h1 <---> s1 <---> s2 <---> h2
+```
+
+where the `s2-h2` link has a 50ms artificial delay. The hosts can be configured
+with the following options:
+
+ - `cmd` - the command to be executed on the host.
+ - `wait` - wait for the command to complete before continuing. By setting it
+   to false, you can start a process on the host in the background, like a
+   daemon/server.
+ - `startup_sleep` - the amount of time (in seconds) that should be waited
+   after starting the command.
+
+The command is formatted by replacing the hostnames (e.g. `h1`) with the
+corresponding IP address, and the parameters (surrounded by '%', e.g.
+`%port%`) with their corresponding values.
+
+### Logging
+When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
+is mounted on the guest at `/tmp/p4app_log`. All data in this directory is
+persisted to the host after running the p4app. The stdout from the hosts'
+commands is stored in this location. If you need to save the output (e.g. logs)
+of a command, you can also put that in this directory.
+
+
 stf
 ---
 

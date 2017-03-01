@@ -177,7 +177,7 @@ def run_mininet(manifest):
     program = '"%s/mininet/single_switch_mininet.py"' % sys.path[0]
     return run_command('python2 %s %s' % (program, ' '.join(switch_args)))
 
-def run_mininet2(manifest):
+def run_multiswitch(manifest):
     output_file = run_compile_bmv2(manifest)
 
     script_args = []
@@ -233,8 +233,8 @@ def main():
 
     if backend == 'mininet':
         rc = run_mininet(manifest)
-    elif backend == 'mininet2':
-        rc = run_mininet2(manifest)
+    elif backend == 'multiswitch':
+        rc = run_multiswitch(manifest)
     elif backend == 'stf':
         rc = run_stf(manifest)
     elif backend == 'compile-bmv2':

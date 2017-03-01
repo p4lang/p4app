@@ -2,8 +2,8 @@
   "program": "simple_router.p4",
   "language": "p4-16",
   "targets": {
-    "mininet2": {
-      "links": [["h1", "s1"], ["s1", "s2"], ["h2", "s2", 50]],
+    "multiswitch": {
+      "links": [["h1", "s1"], ["s1", "s2"], ["s2", "h2", 50]],
       "hosts": {
         "h1": {
             "cmd": "python echo_server.py %port%",
