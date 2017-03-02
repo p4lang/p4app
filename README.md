@@ -228,9 +228,10 @@ with the following options:
 
 The command is formatted by replacing the hostnames (e.g. `h1`) with the
 corresponding IP address, and the parameters (surrounded by '%', e.g.
-`%port%`) with their corresponding values.
+`%port%`) with their corresponding values. The parameters should be defined in
+the top level of the manifest file. For example, have a look at the [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example app.
 
-### Logging
+#### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
 is mounted on the guest at `/tmp/p4app_log`. All data in this directory is
 persisted to the host after running the p4app. The stdout from the hosts'
