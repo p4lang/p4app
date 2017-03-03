@@ -214,7 +214,7 @@ def main():
 
 
     def formatCmd(cmd):
-        params = manifest['parameters'] if 'parameters' in manifest else {}
+        params = conf['parameters'] if 'parameters' in conf else {}
         for param in params:
             cmd = cmd.replace('%'+param+'%', str(params[param]))
         cmd = cmd.replace('%log_dir%', args.log_dir)

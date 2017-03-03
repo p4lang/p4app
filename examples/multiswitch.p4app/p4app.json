@@ -14,11 +14,11 @@
             "cmd": "python echo_client.py h1 %port% %echo_msg%",
             "wait": true
         }
+      },
+      "parameters": {
+        "port": 8000,
+        "echo_msg": "foobar"
       }
     }
-  },
-  "parameters": {
-     "port": 8000,
-     "echo_msg": "foobar"
   }
 }

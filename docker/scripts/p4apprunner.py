@@ -43,9 +43,7 @@ def log_error(*items):
 
 def run_command(command):
     log('>', command)
-    exit_status = os.system(command)
-    rc = exit_status >> 8
-    return rc
+    return os.WEXITSTATUS(os.system(command))
 
 class Manifest:
     def __init__(self, program_file, language, target, target_config):

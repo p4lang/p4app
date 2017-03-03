@@ -199,14 +199,11 @@ automatically configured with l2 and l3 rules for routing traffic to all hosts
         "cmd": "python echo_client.py h1 %port% %echo_msg%",
         "wait": true
     }
+  },
+  "parameters": {
+     "port": 8000,
+     "echo_msg": "foobar"
   }
-}
-
-...
-
-"parameters": {
-   "port": 8000,
-   "echo_msg": "foobar"
 }
 ```
 
@@ -229,7 +226,9 @@ with the following options:
 The command is formatted by replacing the hostnames (e.g. `h1`) with the
 corresponding IP address, and the parameters (surrounded by '%', e.g.
 `%port%`) with their corresponding values. The parameters should be defined in
-the top level of the manifest file. For example, have a look at the [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example app.
+the multiswitch target in the manifest. For example, have a look at the
+[manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example
+app.
 
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
