@@ -274,3 +274,15 @@ The following optional configuration values are supported:
   "run-after-compile": ["date"]
 }
 ```
+
+Advanced Features
+=================
+
+If you're hacking on the P4 toolchain or p4app itself, you may want to use a
+modified Docker image instead of the standard p4lang one. That's easy to do;
+just set the `P4APP_IMAGE` environment variable to the Docker image you'd like
+to use. For example:
+
+```
+P4APP_IMAGE=me/my_p4app_image:latest p4app run examples/simple_router.p4app
+```

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-P4APP_IMAGE=p4lang/p4app:latest
+P4APP_IMAGE=${P4APP_IMAGE:-p4lang/p4app:latest}
 
 function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
