@@ -191,18 +191,18 @@ automatically configured with l2 and l3 rules for routing traffic to all hosts
   ],
   "hosts": {
     "h1": {
-        "cmd": "python echo_server.py %port%",
-        "startup_sleep": 0.2,
-        "wait": false
+      "cmd": "python echo_server.py %port%",
+      "startup_sleep": 0.2,
+      "wait": false
     },
     "h2": {
-        "cmd": "python echo_client.py h1 %port% %echo_msg%",
-        "wait": true
+      "cmd": "python echo_client.py h1 %port% %echo_msg%",
+      "wait": true
     }
   },
   "parameters": {
-     "port": 8000,
-     "echo_msg": "foobar"
+    "port": 8000,
+    "echo_msg": "foobar"
   }
 }
 ```
@@ -230,12 +230,43 @@ the multiswitch target in the manifest. For example, have a look at the
 [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example
 app.
 
+
+#### Specifying entries for each switch
+The `ipv4_lpm`, `send_frame` and `forward` tables are automatically populated
+with this target. Additionally, you can specify entries to be added to each
+switch. You can either include a commands file, or an array of entries. For
+example:
+
+```
+"multiswitch": {
+  "links": [ ... ],
+  "hosts": { ... },
+  "switches": {
+    "s1": {
+      "entries": "s1_commands.txt"
+    },
+    "s2": {
+      "entries": [
+        "table_set_default send_frame _drop",
+        "table_set_default forward _drop",
+        "table_set_default ipv4_lpm _drop"
+      ]
+    }
+  }
+}
+```
+
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
 is mounted on the guest at `/tmp/p4app_log`. All data in this directory is
 persisted to the host after running the p4app. The stdout from the hosts'
 commands is stored in this location. If you need to save the output (e.g. logs)
 of a command, you can also put that in this directory.
+
+To save the debug logs from the P4 switches, set `"bmv2_log": true` in the
+target. To capture PCAPs from all switches, set `"pcap_dump": true`. These
+files will be saved to `/tmp/p4app_log`. For example usage, see the
+[manifest](examples/broadcast.p4app/p4app.json) for the broadcast example app.
 
 
 stf
