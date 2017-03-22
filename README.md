@@ -147,7 +147,7 @@ This backend compiles a P4 program, loads it into a BMV2
 [simple_switch](https://github.com/p4lang/behavioral-model/blob/master/docs/simple_switch.md),
 and creates a Mininet environment that lets you experiment with it.
 
-The following optional configuration values are supported:
+The following configuration values are supported:
 
 ```
 "mininet": {
