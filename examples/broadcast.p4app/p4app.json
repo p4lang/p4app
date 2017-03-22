@@ -1,0 +1,32 @@
+{
+  "program": "bcast_router.p4",
+  "language": "p4-16",
+  "targets": {
+    "multiswitch": {
+      "bmv2_log": true,
+      "pcap_dump": true,
+      "cli": false,
+      "links": [["h1", "s1"], ["h2", "s1"], ["h3", "s1"]],
+      "hosts": {
+        "h1": {
+            "cmd": "./bcast_listen.py",
+            "startup_sleep": 0.2,
+            "wait": false
+        },
+        "h2": {
+            "cmd": "./bcast_listen.py",
+            "wait": false
+        },
+        "h3": {
+            "cmd": "./bcast_send.py",
+            "wait": true
+        }
+      },
+      "switches": {
+          "s1": {
+              "entries": "commands.txt"
+          }
+      }
+    }
+  }
+}
