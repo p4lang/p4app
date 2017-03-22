@@ -237,6 +237,29 @@ persisted to the host after running the p4app. The stdout from the hosts'
 commands is stored in this location. If you need to save the output (e.g. logs)
 of a command, you can also put that in this directory.
 
+custom
+-----------
+
+This is a third method for compiling a P4 program to run in a Mininet
+environment. This target allows you to specify a Python `program` that
+uses Mininet's Python API to specify the network topology and configuration.
+For example:
+
+```
+{
+  "program": "source_routing.p4",
+  "language": "p4-14",
+  "targets": {
+      "custom": {
+	       "program": "topo.py"
+      }
+  }
+}
+
+```
+
+This target will invoke the python script `topo.py` to start Mininet.
+
 
 stf
 ---
