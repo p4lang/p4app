@@ -209,6 +209,23 @@ def run_stf(manifest):
         sys.exit(1)
     return rv
 
+def run_custom(manifest):
+    output_file = run_compile_bmv2(manifest)
+    python_path = 'PYTHONPATH=$PYTHONPATH:/scripts/mininet/'    
+    script_args = []
+    script_args.append('--behavioral-exe "%s"' % 'simple_switch')
+    script_args.append('--json "%s"' % output_file)
+    script_args.append('--cli "%s"' % 'simple_switch_CLI')
+    if not 'program' in manifest.target_config:
+         log_error('No mininet program file provided.')
+         sys.exit(1)
+    program = manifest.target_config['program']
+    rv = run_command('%s python2 %s %s' % (python_path, program, ' '.join(script_args)))
+
+    if rv != 0:
+        sys.exit(1)
+    return rv
+
 def main():
     log('Entering build directory.')
     os.chdir(args.build_dir)
@@ -235,6 +252,8 @@ def main():
         rc = run_multiswitch(manifest)
     elif backend == 'stf':
         rc = run_stf(manifest)
+    elif backend == 'custom':
+        rc = run_custom(manifest)
     elif backend == 'compile-bmv2':
         run_compile_bmv2(manifest)
         rc = 0
