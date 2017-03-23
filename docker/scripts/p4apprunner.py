@@ -71,12 +71,18 @@ def read_manifest(manifest_file):
         log_error('No targets defined in manifest.')
         sys.exit(1)
 
-    for target, target_config in manifest['targets'].iteritems():
-        if args.target is None or args.target == target:
-            return Manifest(program_file, language, target, target_config)
+    if args.target is not None:
+        if args.target in manifest['targets']:
+            log_error('Target not found in manifest:', args.target)
+            sys.exit(1)
+        chosen_target = args.target
+    elif 'default' in manifest['targets']:
+        chosen_target = 'default'
+    else:
+        chosen_target = manifest['targets'].keys()[0]
 
-    log_error('Target not found in manifest:', args.target)
-    sys.exit(1)
+    return Manifest(program_file, language, chosen_target, manifest['targets'][chosen_target])
+
 
 def run_compile_bmv2(manifest):
     if 'run-before-compile' in manifest.target_config:
