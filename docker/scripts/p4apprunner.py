@@ -72,7 +72,7 @@ def read_manifest(manifest_file):
         sys.exit(1)
 
     if args.target is not None:
-        if args.target in manifest['targets']:
+        if args.target not in manifest['targets']:
             log_error('Target not found in manifest:', args.target)
             sys.exit(1)
         chosen_target = args.target
