@@ -184,7 +184,14 @@ def main():
 
     entries = {}
     for sw in topo.switches():
-        entries[sw] = [
+        entries[sw] = []
+        if 'switches' in conf and sw in conf['switches'] and 'entries' in conf['switches'][sw]:
+            extra_entries = conf['switches'][sw]['entries']
+            if type(extra_entries) == list: # array of entries
+                entries[sw] += extra_entries
+            else: # path to file that contains entries
+                entries[sw] += read_entries(extra_entries)
+        entries[sw] += [
             'table_set_default send_frame _drop',
             'table_set_default forward _drop',
             'table_set_default ipv4_lpm _drop']
@@ -212,12 +219,6 @@ def main():
 
     for sw_name in entries:
         sw = net.get(sw_name)
-        if 'switches' in conf and sw_name in conf['switches'] and 'entries' in conf['switches'][sw_name]:
-            extra_entries = conf['switches'][sw_name]['entries']
-            if type(extra_entries) == list: # array of entries
-                entries[sw_name].append(extra_entries)
-            else: # path to file that contains entries
-                entries[sw_name] += read_entries(extra_entries)
         add_entries(sw=sw, entries=entries[sw_name])
 
     for h in net.hosts:

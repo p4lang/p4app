@@ -232,10 +232,11 @@ app.
 
 
 #### Specifying entries for each switch
-The `ipv4_lpm`, `send_frame` and `forward` tables are automatically populated
-with this target. Additionally, you can specify entries to be added to each
-switch. You can either include a commands file, or an array of entries. For
-example:
+The routing tables (`ipv4_lpm`, `send_frame` and `forward`) are automatically
+populated with this target. Additionally, you can specify custom entries to be
+added to each switch. You can either include a commands file, or an array of
+entries. These custom entries will have precedence over the automatically
+generated ones for the routing tables. For example:
 
 ```
 "multiswitch": {
@@ -247,14 +248,18 @@ example:
     },
     "s2": {
       "entries": [
-        "table_set_default send_frame _drop",
-        "table_set_default forward _drop",
-        "table_set_default ipv4_lpm _drop"
+        "table_add ipv4_lpm set_nhop 10.0.1.10/32 => 10.0.1.10 1",
+        "table_add ipv4_lpm set_nhop 10.0.2.10/32 => 10.0.2.10 2"
       ]
     }
   }
 }
 ```
+
+If the entries for `s2` above overlap with the automatically generated entries
+(e.g. there is an automatic entry for `set_nhop 10.0.1.10/32`), these custom
+entries will have precedence and you will see a warning about a duplicate entry
+while the tables are being populated.
 
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
