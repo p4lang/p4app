@@ -70,7 +70,7 @@ def read_manifest(manifest_file):
         sys.exit(1)
 
     for target, target_config in manifest['targets'].iteritems():
-        if args.target is None or args.target == target:
+        if args.target is None or args.target == target or (args.target is None and target == 'default'):
             return Manifest(program_file, language, target, target_config)
 
     log_error('Target not found in manifest:', args.target)

@@ -292,6 +292,11 @@ def main():
             print p.communicate()
             return_codes.append(p.returncode)
 
+    if 'after' in conf and 'cmd' in conf['after']:
+        cmds = conf['after']['cmd'] if type(conf['after']['cmd']) == list else [conf['after']['cmd']]
+        for cmd in cmds:
+            os.system(cmd)
+
     net.stop()
 
     if bmv2_log:
