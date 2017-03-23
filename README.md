@@ -133,9 +133,12 @@ the previous example, we didn't have to specify `"use": "mininet"` - the
 target's name is mininet, and that's enough for p4app to know what you mean.
 
 That's really all there is to it. There's one final tip: if you want to share a
-p4app package with someone else, you can just tar and gzip the whole directory.
-p4app can work transparently with compressed packages - just give it a `.p4app`
-extension, and everything will work.
+p4app package with someone else, you can run `p4app pack my-program.p4app`, and
+p4app will compress the package into a single file. p4app can run compressed
+packages transparently, so the person you send it to won't even have to
+decompress it. If they want to take a look at the files it contains, though,
+they can just run `p4app unpack my-program.p4app`, and p4app will turn the
+package back into a directory.
 
 Backends
 ========
