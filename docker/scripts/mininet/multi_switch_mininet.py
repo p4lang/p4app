@@ -40,6 +40,7 @@ parser.add_argument('--thrift-port', help='Thrift server port for table updates'
                     type=int, action="store", default=9090)
 parser.add_argument('--bmv2-log', help='verbose messages in log file', action="store_true")
 parser.add_argument('--cli', help="start the mininet cli", action="store_true")
+parser.add_argument('--auto-control-plane', help='enable automatic control plane population', action="store_true")
 parser.add_argument('--json', help='Path to JSON config file',
                     type=str, action="store", required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
@@ -50,6 +51,7 @@ parser.add_argument('--target', '-t', help='Target in manifest file to run',
                     type=str, action="store", required=True)
 parser.add_argument('--log-dir', '-l', help='Location to save output to',
                     type=str, action="store", required=True)
+
 
 args = parser.parse_args()
 
@@ -138,6 +140,42 @@ def add_entries(thrift_port=9090, sw=None, entries=None):
     p = subprocess.Popen(['simple_switch_CLI', '--json', args.json, '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE)
     p.communicate(input='\n'.join(entries))
 
+
+def run_control_plane(topo, net, shortestpath):
+    entries = {}
+    for sw in topo.switches():
+        entries[sw] = [
+            'table_set_default send_frame _drop',
+            'table_set_default forward _drop',
+            'table_set_default ipv4_lpm _drop']
+
+        
+    for host_name in topo._host_links:
+        link = topo._host_links[host_name]
+        h = net.get(host_name)
+        h.setARP(link['sw_ip'], link['sw_mac'])
+        h.setDefaultRoute("via %s" % link['sw_ip'])
+        sw = link['sw']
+        entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
+        entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
+        entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
+
+    for h in net.hosts:
+        for sw in net.switches:
+            path = shortestpath.get(sw.name, h.name)
+            if not path: continue
+            if not path[1][0] == 's': continue # next hop is a switch
+            sw_link = topo._sw_links[sw.name][path[1]]
+            h_link = topo._host_links[h.name]
+            entries[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
+            entries[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
+            entries[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
+
+    for sw_name in entries:
+        sw = net.get(sw_name)
+        add_entries(sw=sw, entries=entries[sw_name])
+
+
 def main():
 
     with open(args.manifest, 'r') as f:
@@ -170,38 +208,9 @@ def main():
 
     shortestpath = ShortestPath(links)
 
-    entries = {}
-    for sw in topo.switches():
-        entries[sw] = [
-            'table_set_default send_frame _drop',
-            'table_set_default forward _drop',
-            'table_set_default ipv4_lpm _drop']
+    if args.auto_control_plane: run_control_plane(topo, net, shortestpath)
 
-    for host_name in topo._host_links:
-        link = topo._host_links[host_name]
-        h = net.get(host_name)
-        h.setARP(link['sw_ip'], link['sw_mac'])
-        h.setDefaultRoute("via %s" % link['sw_ip'])
-        sw = link['sw']
-        entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
-        entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
-        entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
-
-    for h in net.hosts:
-        for sw in net.switches:
-            path = shortestpath.get(sw.name, h.name)
-            if not path: continue
-            if not path[1][0] == 's': continue # next hop is a switch
-            sw_link = topo._sw_links[sw.name][path[1]]
-            h_link = topo._host_links[h.name]
-            entries[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
-            entries[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
-            entries[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
-
-    for sw_name in entries:
-        sw = net.get(sw_name)
-        add_entries(sw=sw, entries=entries[sw_name])
-
+            
     for h in net.hosts:
         h.describe()
 
