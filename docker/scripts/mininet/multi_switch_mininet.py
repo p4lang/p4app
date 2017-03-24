@@ -306,8 +306,7 @@ def main():
             p.send_signal(signal.SIGINT)
             sleep(0.2)
             if p.returncode is None: p.kill()
-            print p.communicate()
-            return_codes.append(p.returncode)
+        _wait_for_exit(p, host_name)
 
     if 'after' in conf and 'cmd' in conf['after']:
         cmds = conf['after']['cmd'] if type(conf['after']['cmd']) == list else [conf['after']['cmd']]
