@@ -225,6 +225,7 @@ with the following options:
    daemon/server.
  - `startup_sleep` - the amount of time (in seconds) that should be waited
    after starting the command.
+ - `latency` - the latency between this host and the switch. This can either be a number (interpreted as seconds) or a string with time units (e.g. `50ms` or `1s`). This overrides the latency set in the `links` object.
 
 The command is formatted by replacing the hostnames (e.g. `h1`) with the
 corresponding IP address, and the parameters (surrounded by '%', e.g.
@@ -232,6 +233,9 @@ corresponding IP address, and the parameters (surrounded by '%', e.g.
 the multiswitch target in the manifest. For example, have a look at the
 [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example
 app.
+
+#### Limitations
+Currently, each host can be connected to at most one switch.
 
 
 #### Specifying entries for each switch
