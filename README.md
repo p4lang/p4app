@@ -325,3 +325,12 @@ to use. For example:
 ```
 P4APP_IMAGE=me/my_p4app_image:latest p4app run examples/simple_router.p4app
 ```
+
+#### Specify the name of the manifest file
+By default, p4app will use the manifest file called `p4app.json` in the app's
+directory. If your manifest file is not called `p4app.json`, you can use the
+`--manifest` option to specify the name of the manifest. For example:
+
+```
+p4app run myapp.p4app --manifest testing.p4app
+```
