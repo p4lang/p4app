@@ -131,6 +131,15 @@ class MultiSwitchTopo(Topo):
             self._sw_links[sw1][sw2] = [sw1_port, sw2_port]
             self._sw_links[sw2][sw1] = [sw2_port, sw1_port]
 
+def read_entries(filename):
+    entries = []
+    with open(filename, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line == '': continue
+            entries.append(line)
+    return entries
+
 
 def add_entries(thrift_port=9090, sw=None, entries=None):
     assert entries
@@ -141,10 +150,17 @@ def add_entries(thrift_port=9090, sw=None, entries=None):
     p.communicate(input='\n'.join(entries))
 
 
-def run_control_plane(topo, net, shortestpath):
+def run_control_plane(conf, topo, net, shortestpath):
     entries = {}
     for sw in topo.switches():
-        entries[sw] = [
+        entries[sw] = []
+        if 'switches' in conf and sw in conf['switches'] and 'entries' in conf['switches'][sw]:
+            extra_entries = conf['switches'][sw]['entries']
+            if type(extra_entries) == list: # array of entries
+                entries[sw] += extra_entries
+            else: # path to file that contains entries
+                entries[sw] += read_entries(extra_entries)
+        entries[sw] += [
             'table_set_default send_frame _drop',
             'table_set_default forward _drop',
             'table_set_default ipv4_lpm _drop']
@@ -176,6 +192,7 @@ def run_control_plane(topo, net, shortestpath):
         add_entries(sw=sw, entries=entries[sw_name])
 
 
+
 def main():
 
     with open(args.manifest, 'r') as f:
@@ -191,6 +208,9 @@ def main():
     links = [l[:2] for l in conf['links']]
     latencies = dict([(''.join(sorted(l[:2])), l[2]) for l in conf['links'] if len(l)==3])
 
+    bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
+    pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
+    
     topo = MultiSwitchTopo(links, latencies)
     switchClass = configureP4Switch(
             sw_path=args.behavioral_exe,
@@ -208,13 +228,13 @@ def main():
 
     shortestpath = ShortestPath(links)
 
-    if args.auto_control_plane: run_control_plane(topo, net, shortestpath)
+    if args.auto_control_plane: run_control_plane(conf, topo, net, shortestpath)
 
             
     for h in net.hosts:
         h.describe()
 
-    if args.cli:
+    if args.cli or ('cli' in conf and conf['cli']):
         CLI(net)
 
     stdout_files = dict()
@@ -273,6 +293,11 @@ def main():
             return_codes.append(p.returncode)
 
     net.stop()
+
+    if bmv2_log:
+        os.system('bash -c "cp /tmp/p4s.s*.log \'%s\'"' % args.log_dir)
+    if pcap_dump:
+        os.system('bash -c "cp *.pcap \'%s\'"' % args.log_dir)
 
     bad_codes = [rc for rc in return_codes if rc != 0]
     if len(bad_codes): sys.exit(1)

@@ -133,9 +133,12 @@ the previous example, we didn't have to specify `"use": "mininet"` - the
 target's name is mininet, and that's enough for p4app to know what you mean.
 
 That's really all there is to it. There's one final tip: if you want to share a
-p4app package with someone else, you can just tar and gzip the whole directory.
-p4app can work transparently with compressed packages - just give it a `.p4app`
-extension, and everything will work.
+p4app package with someone else, you can run `p4app pack my-program.p4app`, and
+p4app will compress the package into a single file. p4app can run compressed
+packages transparently, so the person you send it to won't even have to
+decompress it. If they want to take a look at the files it contains, though,
+they can just run `p4app unpack my-program.p4app`, and p4app will turn the
+package back into a directory.
 
 Backends
 ========
@@ -147,7 +150,7 @@ This backend compiles a P4 program, loads it into a BMV2
 [simple_switch](https://github.com/p4lang/behavioral-model/blob/master/docs/simple_switch.md),
 and creates a Mininet environment that lets you experiment with it.
 
-The following optional configuration values are supported:
+The following configuration values are supported:
 
 ```
 "mininet": {
@@ -191,18 +194,18 @@ automatically configured with l2 and l3 rules for routing traffic to all hosts
   ],
   "hosts": {
     "h1": {
-        "cmd": "python echo_server.py %port%",
-        "startup_sleep": 0.2,
-        "wait": false
+      "cmd": "python echo_server.py %port%",
+      "startup_sleep": 0.2,
+      "wait": false
     },
     "h2": {
-        "cmd": "python echo_client.py h1 %port% %echo_msg%",
-        "wait": true
+      "cmd": "python echo_client.py h1 %port% %echo_msg%",
+      "wait": true
     }
   },
   "parameters": {
-     "port": 8000,
-     "echo_msg": "foobar"
+    "port": 8000,
+    "echo_msg": "foobar"
   }
 }
 ```
@@ -230,12 +233,48 @@ the multiswitch target in the manifest. For example, have a look at the
 [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example
 app.
 
+
+#### Specifying entries for each switch
+The routing tables (`ipv4_lpm`, `send_frame` and `forward`) are automatically
+populated with this target. Additionally, you can specify custom entries to be
+added to each switch. You can either include a commands file, or an array of
+entries. These custom entries will have precedence over the automatically
+generated ones for the routing tables. For example:
+
+```
+"multiswitch": {
+  "links": [ ... ],
+  "hosts": { ... },
+  "switches": {
+    "s1": {
+      "entries": "s1_commands.txt"
+    },
+    "s2": {
+      "entries": [
+        "table_add ipv4_lpm set_nhop 10.0.1.10/32 => 10.0.1.10 1",
+        "table_add ipv4_lpm set_nhop 10.0.2.10/32 => 10.0.2.10 2"
+      ]
+    }
+  }
+}
+```
+
+If the entries for `s2` above overlap with the automatically generated entries
+(e.g. there is an automatic entry for `set_nhop 10.0.1.10/32`), these custom
+entries will have precedence and you will see a warning about a duplicate entry
+while the tables are being populated.
+
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
 is mounted on the guest at `/tmp/p4app_log`. All data in this directory is
 persisted to the host after running the p4app. The stdout from the hosts'
 commands is stored in this location. If you need to save the output (e.g. logs)
 of a command, you can also put that in this directory.
+
+To save the debug logs from the P4 switches, set `"bmv2_log": true` in the
+target. To capture PCAPs from all switches, set `"pcap_dump": true`. These
+files will be saved to `/tmp/p4app_log`. For example usage, see the
+[manifest](examples/broadcast.p4app/p4app.json) for the broadcast example app.
 
 custom
 -----------
