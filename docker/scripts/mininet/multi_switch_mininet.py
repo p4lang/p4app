@@ -40,6 +40,7 @@ parser.add_argument('--thrift-port', help='Thrift server port for table updates'
                     type=int, action="store", default=9090)
 parser.add_argument('--bmv2-log', help='verbose messages in log file', action="store_true")
 parser.add_argument('--cli', help="start the mininet cli", action="store_true")
+parser.add_argument('--auto-control-plane', help='enable automatic control plane population', action="store_true")
 parser.add_argument('--json', help='Path to JSON config file',
                     type=str, action="store", required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
@@ -50,6 +51,7 @@ parser.add_argument('--target', '-t', help='Target in manifest file to run',
                     type=str, action="store", required=True)
 parser.add_argument('--log-dir', '-l', help='Location to save output to',
                     type=str, action="store", required=True)
+
 
 args = parser.parse_args()
 
@@ -147,41 +149,8 @@ def add_entries(thrift_port=9090, sw=None, entries=None):
     p = subprocess.Popen(['simple_switch_CLI', '--json', args.json, '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE)
     p.communicate(input='\n'.join(entries))
 
-def main():
 
-    with open(args.manifest, 'r') as f:
-        manifest = json.load(f)
-
-    conf = manifest['targets'][args.target]
-
-    if not os.path.isdir(args.log_dir):
-        if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
-        os.mkdir(args.log_dir)
-
-
-    links = [l[:2] for l in conf['links']]
-    latencies = dict([(''.join(sorted(l[:2])), l[2]) for l in conf['links'] if len(l)==3])
-
-    bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
-    pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
-
-    topo = MultiSwitchTopo(links, latencies)
-    switchClass = configureP4Switch(
-            sw_path=args.behavioral_exe,
-            json_path=args.json,
-            log_console=bmv2_log,
-            pcap_dump=pcap_dump)
-    net = Mininet(topo = topo,
-                  link = TCLink,
-                  host = P4Host,
-                  switch = switchClass,
-                  controller = None)
-    net.start()
-
-    sleep(1)
-
-    shortestpath = ShortestPath(links)
-
+def run_control_plane(conf, topo, net, shortestpath):
     entries = {}
     for sw in topo.switches():
         entries[sw] = []
@@ -196,6 +165,7 @@ def main():
             'table_set_default forward _drop',
             'table_set_default ipv4_lpm _drop']
 
+        
     for host_name in topo._host_links:
         link = topo._host_links[host_name]
         h = net.get(host_name)
@@ -221,6 +191,46 @@ def main():
         sw = net.get(sw_name)
         add_entries(sw=sw, entries=entries[sw_name])
 
+
+
+def main():
+
+    with open(args.manifest, 'r') as f:
+        manifest = json.load(f)
+
+    conf = manifest['targets'][args.target]
+
+    if not os.path.isdir(args.log_dir):
+        if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
+        os.mkdir(args.log_dir)
+
+
+    links = [l[:2] for l in conf['links']]
+    latencies = dict([(''.join(sorted(l[:2])), l[2]) for l in conf['links'] if len(l)==3])
+
+    bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
+    pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
+    
+    topo = MultiSwitchTopo(links, latencies)
+    switchClass = configureP4Switch(
+            sw_path=args.behavioral_exe,
+            json_path=args.json,
+            log_console=args.bmv2_log,
+            pcap_dump=args.pcap_dump)
+    net = Mininet(topo = topo,
+                  link = TCLink,
+                  host = P4Host,
+                  switch = switchClass,
+                  controller = None)
+    net.start()
+
+    sleep(1)
+
+    shortestpath = ShortestPath(links)
+
+    if args.auto_control_plane: run_control_plane(conf, topo, net, shortestpath)
+
+            
     for h in net.hosts:
         h.describe()
 

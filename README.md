@@ -276,6 +276,29 @@ target. To capture PCAPs from all switches, set `"pcap_dump": true`. These
 files will be saved to `/tmp/p4app_log`. For example usage, see the
 [manifest](examples/broadcast.p4app/p4app.json) for the broadcast example app.
 
+custom
+-----------
+
+This is a third method for compiling a P4 program to run in a Mininet
+environment. This target allows you to specify a Python `program` that
+uses Mininet's Python API to specify the network topology and configuration.
+For example:
+
+```
+{
+  "program": "source_routing.p4",
+  "language": "p4-14",
+  "targets": {
+      "custom": {
+	       "program": "topo.py"
+      }
+  }
+}
+
+```
+
+This target will invoke the python script `topo.py` to start Mininet.
+
 
 stf
 ---

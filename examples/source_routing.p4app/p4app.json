@@ -1,0 +1,28 @@
+{
+    "program": "source_routing.p4",
+    "language": "p4-14",
+    "targets": {
+	"multiswitch": {
+	    "auto-control-plane": false,
+	    "links": [["h1", "s1"], ["h2", "s2"], ["h3", "s3"], ["s1", "s2"], ["s2", "s3"]],
+	    "hosts": {
+		"h1": {
+		    "ip": "10.0.1.10",
+		    "mac": "00:04:00:00:00:01"
+		},
+		"h2": {
+		    "ip": "10.0.2.10",
+		    "mac": "00:04:00:00:00:02"
+		},
+		"h3": {
+		    "ip": "10.0.3.10",
+		    "mac": "00:04:00:00:00:03"
+		}
+	    },
+	    "parameters": {
+		"port": 8000,
+		"echo_msg": "foobar"
+	    }
+	}
+    }
+}
