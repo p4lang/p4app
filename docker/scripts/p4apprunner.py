@@ -182,7 +182,8 @@ def run_multiswitch(manifest):
     script_args.append('--log-dir "/tmp/p4app_logs"')
     script_args.append('--manifest "p4app.json"')
     script_args.append('--target "%s"' % manifest.target)
-    if manifest.target_config['auto-control-plane']: script_args.append('--auto-control-plane' )
+    if 'auto-control-plane' in manifest.target_config and manifest.target_config['auto-control-plane']:
+        script_args.append('--auto-control-plane' )
     script_args.append('--behavioral-exe "%s"' % 'simple_switch')
     script_args.append('--json "%s"' % output_file)
     #script_args.append('--cli')
