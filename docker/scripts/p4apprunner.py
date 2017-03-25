@@ -27,6 +27,8 @@ parser.add_argument('--build-dir', help='Directory to build in.',
                     type=str, action='store', required=False, default='/tmp')
 parser.add_argument('--quiet', help='Suppress log messages.',
                     action='store_true', required=False, default=False)
+parser.add_argument('--manifest', help='Path to manifest file.',
+                    type=str, action='store', required=False, default='./p4app.json')
 parser.add_argument('app', help='.p4app package to run.', type=str)
 parser.add_argument('target', help=('Target to run. Defaults to the first target '
                                     'in the package.'),
@@ -180,7 +182,7 @@ def run_multiswitch(manifest):
 
     script_args = []
     script_args.append('--log-dir "/tmp/p4app_logs"')
-    script_args.append('--manifest "p4app.json"')
+    script_args.append('--manifest "%s"' % args.manifest)
     script_args.append('--target "%s"' % manifest.target)
     if 'auto-control-plane' in manifest.target_config and manifest.target_config['auto-control-plane']:
         script_args.append('--auto-control-plane' )
@@ -240,7 +242,7 @@ def main():
     tar.close()
 
     log('Reading package manifest.')
-    with open('p4app.json', 'r') as manifest_file:
+    with open(args.manifest, 'r') as manifest_file:
         manifest = read_manifest(manifest_file)
 
     # Dispatch to the backend implementation for this target.
