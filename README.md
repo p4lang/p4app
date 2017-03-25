@@ -276,6 +276,25 @@ target. To capture PCAPs from all switches, set `"pcap_dump": true`. These
 files will be saved to `/tmp/p4app_log`. For example usage, see the
 [manifest](examples/broadcast.p4app/p4app.json) for the broadcast example app.
 
+#### Cleanup commands
+If you need to execute commands in the docker container after running the
+target (and before mininet is stopped), you can use `after`. `after` should
+contain `cmd`, which can either be a command or a list of commands. For
+example:
+
+```
+"multiswitch": {
+  "links": [ ... ],
+  "hosts": { ... },
+  "after": {
+    "cmd": [
+      "echo register_read my_register 1 | simple_switch_CLI --json p4src/my_router.p4.json",
+      "echo register_read my_register 2 | simple_switch_CLI --json p4src/my_router.p4.json"
+    ]
+  }
+}
+```
+
 custom
 -----------
 
@@ -298,7 +317,6 @@ For example:
 ```
 
 This target will invoke the python script `topo.py` to start Mininet.
-
 
 stf
 ---
