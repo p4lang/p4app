@@ -268,6 +268,37 @@ If the entries for `s2` above overlap with the automatically generated entries
 entries will have precedence and you will see a warning about a duplicate entry
 while the tables are being populated.
 
+#### Custom topology class
+Instead of letting this target create the mininet Topo class, you can use your
+own. Specify the name of your module with the `topo_module` option. For example:
+
+```
+"multiswitch": {
+  ...
+  "topo_module": "mytopo"
+  ...
+}
+```
+
+This will import the `mytopo` module, `mytopo.py`, which should be in the same
+directory as the manifest file (`p4app.json`). The module should implement the
+class `CustomAppTopo`. It can extend the default topo class, `apptopo.AppTopo`.
+For example:
+
+```
+# mytopo.py
+from apptopo import AppTopo
+
+class CustomAppTopo(AppTopo):
+    def __init__(self, *args, **kwargs):
+        AppTopo.__init__(self, *args, **kwargs)
+
+        print self.links()
+```
+
+See the [customtopo.p4app](examples/customtopo.p4app/mytopo.py) working example.
+
+
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
 is mounted on the guest at `/tmp/p4app_log`. All data in this directory is

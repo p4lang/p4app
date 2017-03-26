@@ -21,6 +21,7 @@ import sys
 import subprocess
 import argparse
 import json
+import importlib
 from time import sleep
 
 from mininet.net import Mininet
@@ -30,6 +31,7 @@ from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
 from p4_mininet import P4Switch, P4Host
+import apptopo
 
 from shortest_path import ShortestPath
 
@@ -69,68 +71,6 @@ def configureP4Switch(**switch_args):
             P4Switch.__init__(self, *opts, **kwargs)
     return ConfiguredP4Switch
 
-
-class MultiSwitchTopo(Topo):
-
-    def __init__(self, links, latencies={}, **opts):
-        Topo.__init__(self, **opts)
-
-        nodes = sum(map(list, zip(*links)), [])
-        host_names = sorted(list(set(filter(lambda n: n[0] == 'h', nodes))))
-        sw_names = sorted(list(set(filter(lambda n: n[0] == 's', nodes))))
-        sw_ports = dict([(sw, []) for sw in sw_names])
-
-        self._host_links = {}
-        self._sw_links = dict([(sw, {}) for sw in sw_names])
-
-        for sw_name in sw_names:
-            self.addSwitch(sw_name)
-
-        for host_name in host_names:
-            host_num = int(host_name[1:])
-
-            host_ip = "10.0.%d.10" % host_num
-            host_mac = '00:04:00:00:00:%02x' % host_num
-
-            self.addHost(host_name, ip=host_ip+'/24', mac=host_mac)
-
-            host_links = filter(lambda l: l[0]==host_name or l[1]==host_name, links)
-            assert len(host_links) == 1, "Host sholud be connected to exactly one switch, not " + str(host_links)
-            link = host_links[0]
-            sw = link[0] if link[0] != host_name else link[1]
-            sw_num = int(sw[1:])
-            assert sw[0]=='s', "Hosts should be connected to switches, not " + str(s)
-
-            delay_key = ''.join([host_name, sw])
-            delay = latencies[delay_key] if delay_key in latencies else 0
-            if not isinstance(delay, (str, unicode)): delay = str(delay) + "ms"
-            self.addLink(host_name, sw, delay=delay)
-            sw_ports[sw].append(host_name)
-            self._host_links[host_name] = dict(
-                    host_mac = host_mac,
-                    host_ip = host_ip,
-                    sw = sw,
-                    sw_mac = "00:aa:00:%02x:00:%02x" % (sw_num, host_num),
-                    sw_ip = "10.0.%d.1" % host_num,
-                    sw_port = sw_ports[sw].index(host_name)+1
-                    )
-
-        for link in links: # only check switch-switch links
-            sw1, sw2 = link
-            if sw1[0] != 's' or sw2[0] != 's': continue
-
-            delay_key = ''.join(sorted([host_name, sw]))
-            delay = latencies[delay_key] if delay_key in latencies else 0
-            self.addLink(sw1, sw2, delay="%dms"%delay)
-            sw_ports[sw1].append(sw2)
-            sw_ports[sw2].append(sw1)
-
-            sw1_num, sw2_num = int(sw1[1:]), int(sw2[1:])
-            sw1_port = dict(mac="00:aa:00:%02x:%02x:00" % (sw1_num, sw2_num), port=sw_ports[sw1].index(sw2)+1)
-            sw2_port = dict(mac="00:aa:00:%02x:%02x:00" % (sw2_num, sw1_num), port=sw_ports[sw2].index(sw1)+1)
-
-            self._sw_links[sw1][sw2] = [sw1_port, sw2_port]
-            self._sw_links[sw2][sw1] = [sw2_port, sw1_port]
 
 def read_entries(filename):
     entries = []
@@ -207,6 +147,13 @@ def main():
             s = s.replace('%'+param+'%', str(params[param]))
         return s
 
+    AppTopo = apptopo.AppTopo
+
+    if 'topo_module' in conf:
+        sys.path.insert(0, os.path.dirname(args.manifest))
+        topo_module = importlib.import_module(conf['topo_module'])
+        AppTopo = topo_module.CustomAppTopo
+
     if not os.path.isdir(args.log_dir):
         if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
         os.mkdir(args.log_dir)
@@ -230,7 +177,7 @@ def main():
     bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
     pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
     
-    topo = MultiSwitchTopo(links, latencies)
+    topo = AppTopo(links, latencies, manifest=manifest, target=args.target)
     switchClass = configureP4Switch(
             sw_path=args.behavioral_exe,
             json_path=args.json,
