@@ -17,4 +17,3 @@ class CustomAppTopo(AppTopo):
                 info['delay'] = '123ms'
 
         print self.links(withInfo=True)
-
