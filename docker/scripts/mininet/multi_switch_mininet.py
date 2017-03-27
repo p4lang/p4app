@@ -103,7 +103,8 @@ class MultiSwitchTopo(Topo):
 
             delay_key = ''.join([host_name, sw])
             delay = latencies[delay_key] if delay_key in latencies else 0
-            self.addLink(host_name, sw, delay="%dms"%delay)
+            if not isinstance(delay, (str, unicode)): delay = str(delay) + "ms"
+            self.addLink(host_name, sw, delay=delay)
             sw_ports[sw].append(host_name)
             self._host_links[host_name] = dict(
                     host_mac = host_mac,
@@ -165,7 +166,7 @@ def run_control_plane(conf, topo, net, shortestpath):
             'table_set_default forward _drop',
             'table_set_default ipv4_lpm _drop']
 
-        
+
     for host_name in topo._host_links:
         link = topo._host_links[host_name]
         h = net.get(host_name)
@@ -199,6 +200,12 @@ def main():
         manifest = json.load(f)
 
     conf = manifest['targets'][args.target]
+    params = conf['parameters'] if 'parameters' in conf else {}
+
+    def formatParams(s):
+        for param in params:
+            s = s.replace('%'+param+'%', str(params[param]))
+        return s
 
     if not os.path.isdir(args.log_dir):
         if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
@@ -207,6 +214,18 @@ def main():
 
     links = [l[:2] for l in conf['links']]
     latencies = dict([(''.join(sorted(l[:2])), l[2]) for l in conf['links'] if len(l)==3])
+
+    for host_name in sorted(conf['hosts'].keys()):
+        host = conf['hosts'][host_name]
+        if 'latency' not in host: continue
+        for a, b in links:
+            if a != host_name and b != host_name: continue
+            other = a if a != host_name else b
+            latencies[host_name+other] = host['latency']
+
+    for l in latencies:
+        if isinstance(latencies[l], (str, unicode)):
+            latencies[l] = formatParams(latencies[l])
 
     bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
     pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
@@ -243,9 +262,7 @@ def main():
 
 
     def formatCmd(cmd):
-        params = conf['parameters'] if 'parameters' in conf else {}
-        for param in params:
-            cmd = cmd.replace('%'+param+'%', str(params[param]))
+        cmd = formatParams(cmd)
         cmd = cmd.replace('%log_dir%', args.log_dir)
         for h in net.hosts:
             cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
@@ -289,8 +306,7 @@ def main():
             p.send_signal(signal.SIGINT)
             sleep(0.2)
             if p.returncode is None: p.kill()
-            print p.communicate()
-            return_codes.append(p.returncode)
+        _wait_for_exit(p, host_name)
 
     if 'after' in conf and 'cmd' in conf['after']:
         cmds = conf['after']['cmd'] if type(conf['after']['cmd']) == list else [conf['after']['cmd']]
