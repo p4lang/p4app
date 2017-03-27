@@ -1,0 +1,30 @@
+{
+  "program": "simple_router.p4",
+  "language": "p4-16",
+  "targets": {
+      "multiswitch": {
+      "auto-control-plane": true,
+      "links": [["h1", "s1"], ["h2", "s2"], ["h3", "s1"], ["h3", "s2", 100]],
+      "hosts": {
+        "h1": {
+            "cmd": "python echo_server.py %port%",
+            "startup_sleep": 0.2,
+            "wait": false
+        },
+        "h2": {
+            "cmd": "python echo_server.py %port%",
+            "startup_sleep": 0.2,
+            "wait": false
+        },
+        "h3": {
+            "cmd": "python echo_client.py %echo_msg% h1 %port% h2 %port%",
+            "wait": true
+        }
+      },
+      "parameters": {
+        "port": 8000,
+        "echo_msg": "foobar"
+      }
+    }
+  }
+}

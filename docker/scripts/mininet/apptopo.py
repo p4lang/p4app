@@ -22,28 +22,33 @@ class AppTopo(Topo):
             host_ip = "10.0.%d.10" % host_num
             host_mac = '00:04:00:00:00:%02x' % host_num
 
-            self.addHost(host_name, ip=host_ip+'/24', mac=host_mac)
+            self.addHost(host_name)
 
+            self._host_links[host_name] = {}
             host_links = filter(lambda l: l[0]==host_name or l[1]==host_name, links)
-            assert len(host_links) == 1, "Host sholud be connected to exactly one switch, not " + str(host_links)
-            link = host_links[0]
-            sw = link[0] if link[0] != host_name else link[1]
-            sw_num = int(sw[1:])
-            assert sw[0]=='s', "Hosts should be connected to switches, not " + str(s)
 
-            delay_key = ''.join([host_name, sw])
-            delay = latencies[delay_key] if delay_key in latencies else 0
-            if not isinstance(delay, (str, unicode)): delay = str(delay) + "ms"
-            self.addLink(host_name, sw, delay=delay)
-            sw_ports[sw].append(host_name)
-            self._host_links[host_name] = dict(
-                    host_mac = host_mac,
-                    host_ip = host_ip,
-                    sw = sw,
-                    sw_mac = "00:aa:00:%02x:00:%02x" % (sw_num, host_num),
-                    sw_ip = "10.0.%d.1" % host_num,
-                    sw_port = sw_ports[sw].index(host_name)+1
-                    )
+            sw_idx = 0
+            for link in host_links:
+                sw = link[0] if link[0] != host_name else link[1]
+                sw_num = int(sw[1:])
+                assert sw[0]=='s', "Hosts should be connected to switches, not " + str(sw)
+
+                delay_key = ''.join([host_name, sw])
+                delay = latencies[delay_key] if delay_key in latencies else 0
+                if not isinstance(delay, (str, unicode)): delay = str(delay) + "ms"
+                sw_ports[sw].append(host_name)
+                self._host_links[host_name][sw] = dict(
+                        idx=sw_idx,
+                        host_mac = host_mac,
+                        host_ip = host_ip,
+                        sw = sw,
+                        sw_mac = "00:aa:00:%02x:00:%02x" % (sw_num, host_num),
+                        sw_ip = "10.0.%d.%d" % (host_num, sw_idx+1),
+                        sw_port = sw_ports[sw].index(host_name)+1
+                        )
+                self.addLink(host_name, sw, delay=delay,
+                        addr1=host_mac, addr2=self._host_links[host_name][sw]['sw_mac'])
+                sw_idx += 1
 
         for link in links: # only check switch-switch links
             sw1, sw2 = link
