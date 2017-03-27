@@ -34,8 +34,7 @@ class AppTopo(Topo):
                 assert sw[0]=='s', "Hosts should be connected to switches, not " + str(sw)
 
                 delay_key = ''.join([host_name, sw])
-                delay = latencies[delay_key] if delay_key in latencies else 0
-                if not isinstance(delay, (str, unicode)): delay = str(delay) + "ms"
+                delay = latencies[delay_key] if delay_key in latencies else '0ms'
                 sw_ports[sw].append(host_name)
                 self._host_links[host_name][sw] = dict(
                         idx=sw_idx,
@@ -55,8 +54,8 @@ class AppTopo(Topo):
             if sw1[0] != 's' or sw2[0] != 's': continue
 
             delay_key = ''.join(sorted([host_name, sw]))
-            delay = latencies[delay_key] if delay_key in latencies else 0
-            self.addLink(sw1, sw2, delay="%dms"%delay)
+            delay = latencies[delay_key] if delay_key in latencies else '0ms'
+            self.addLink(sw1, sw2, delay=delay)
             sw_ports[sw1].append(sw2)
             sw_ports[sw2].append(sw1)
 

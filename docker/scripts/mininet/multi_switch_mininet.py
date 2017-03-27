@@ -116,6 +116,8 @@ def main():
     for l in latencies:
         if isinstance(latencies[l], (str, unicode)):
             latencies[l] = formatParams(latencies[l])
+        else:
+            latencies[l] = str(latencies[l]) + "ms"
 
     bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
     pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
