@@ -72,14 +72,15 @@ def read_manifest(manifest_file):
         sys.exit(1)
 
     if args.target is not None:
-        if args.target not in manifest['targets']:
-            log_error('Target not found in manifest:', args.target)
-            sys.exit(1)
         chosen_target = args.target
-    elif 'default' in manifest['targets']:
-        chosen_target = 'default'
+    elif 'default-target' in manifest:
+        chosen_target = manifest['default-target']
     else:
         chosen_target = manifest['targets'].keys()[0]
+
+    if chosen_target not in manifest['targets']:
+        log_error('Target not found in manifest:', chosen_target)
+        sys.exit(1)
 
     return Manifest(program_file, language, chosen_target, manifest['targets'][chosen_target])
 
