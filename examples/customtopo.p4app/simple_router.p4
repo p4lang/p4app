@@ -31,13 +31,20 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 }
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
+    register<bit<32>>(1) forward_count_register;
     @name("_drop") action _drop() {
         mark_to_drop();
+    }
+    action increment_counter() {
+        bit<32> forward_count;
+        forward_count_register.read(forward_count, 0);
+        forward_count_register.write(0, forward_count+1);
     }
     @name("set_nhop") action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
         meta.ingress_metadata.nhop_ipv4 = nhop_ipv4;
         standard_metadata.egress_spec = port;
         hdr.ipv4.ttl = hdr.ipv4.ttl + 8w255;
+        increment_counter();
     }
     @name("set_dmac") action set_dmac(bit<48> dmac) {
         hdr.ethernet.dstAddr = dmac;

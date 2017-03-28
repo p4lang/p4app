@@ -10,6 +10,7 @@ class CustomAppController(AppController):
         AppController.start(self)
 
     def stop(self):
-        print "Mininet is about to stop"
+        reg_val = self.read_register('forward_count_register', 0)
+        print "The switch forwarded a total of %d packets" % reg_val
         AppController.stop(self)
 
