@@ -82,10 +82,7 @@ class AppController:
                 path = shortestpath.get(h.name, h2.name, exclude=lambda n: n[0]=='h')
                 if not path: continue
                 h_link = self.topo._host_links[h.name][path[1]]
-                print h, h2
-                print path
                 h2_link = self.topo._host_links[h2.name].values()[0]
-                print 'ip route add %s via %s' % (h2_link['host_ip'], h_link['sw_ip'])
                 h.cmd('ip route add %s via %s' % (h2_link['host_ip'], h_link['sw_ip']))
 
 
