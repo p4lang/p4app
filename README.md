@@ -112,12 +112,15 @@ this, just place that file in the package, and p4app will make sure that the
 appropriate tools can find it.
 
 If there are multiple targets and the user doesn't specify one by name, p4app
-will run the first target in the list. Here's an example with several targets:
+will run one of the targets, chosen arbitrarily. You can set the default target
+to be run using the `default-target` option. Here's an example with several
+targets:
 
 ```
 {
   "program": "my_program.p4",
   "language": "p4-14",
+  "default-target": "debug",
   "targets": {
     "debug": { "use": "mininet", "num-hosts": 2 },
     "test1": { "use": "stf", "test": "test1.stf" },
