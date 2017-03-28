@@ -32,8 +32,7 @@ from mininet.cli import CLI
 
 from p4_mininet import P4Switch, P4Host
 import apptopo
-
-from shortest_path import ShortestPath
+import appcontroller
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--behavioral-exe', help='Path to behavioral executable',
@@ -72,68 +71,6 @@ def configureP4Switch(**switch_args):
     return ConfiguredP4Switch
 
 
-def read_entries(filename):
-    entries = []
-    with open(filename, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line == '': continue
-            entries.append(line)
-    return entries
-
-
-def add_entries(thrift_port=9090, sw=None, entries=None):
-    assert entries
-    if sw: thrift_port = sw.thrift_port
-
-    print '\n'.join(entries)
-    p = subprocess.Popen(['simple_switch_CLI', '--json', args.json, '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE)
-    p.communicate(input='\n'.join(entries))
-
-
-def run_control_plane(conf, topo, net, shortestpath):
-    entries = {}
-    for sw in topo.switches():
-        entries[sw] = []
-        if 'switches' in conf and sw in conf['switches'] and 'entries' in conf['switches'][sw]:
-            extra_entries = conf['switches'][sw]['entries']
-            if type(extra_entries) == list: # array of entries
-                entries[sw] += extra_entries
-            else: # path to file that contains entries
-                entries[sw] += read_entries(extra_entries)
-        entries[sw] += [
-            'table_set_default send_frame _drop',
-            'table_set_default forward _drop',
-            'table_set_default ipv4_lpm _drop']
-
-
-    for host_name in topo._host_links:
-        link = topo._host_links[host_name]
-        h = net.get(host_name)
-        h.setARP(link['sw_ip'], link['sw_mac'])
-        h.setDefaultRoute("via %s" % link['sw_ip'])
-        sw = link['sw']
-        entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
-        entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
-        entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
-
-    for h in net.hosts:
-        for sw in net.switches:
-            path = shortestpath.get(sw.name, h.name)
-            if not path: continue
-            if not path[1][0] == 's': continue # next hop is a switch
-            sw_link = topo._sw_links[sw.name][path[1]]
-            h_link = topo._host_links[h.name]
-            entries[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
-            entries[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
-            entries[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
-
-    for sw_name in entries:
-        sw = net.get(sw_name)
-        add_entries(sw=sw, entries=entries[sw_name])
-
-
-
 def main():
 
     with open(args.manifest, 'r') as f:
@@ -148,11 +85,17 @@ def main():
         return s
 
     AppTopo = apptopo.AppTopo
+    AppController = appcontroller.AppController
 
     if 'topo_module' in conf:
         sys.path.insert(0, os.path.dirname(args.manifest))
         topo_module = importlib.import_module(conf['topo_module'])
         AppTopo = topo_module.CustomAppTopo
+
+    if 'controller_module' in conf:
+        sys.path.insert(0, os.path.dirname(args.manifest))
+        controller_module = importlib.import_module(conf['controller_module'])
+        AppController = controller_module.CustomAppController
 
     if not os.path.isdir(args.log_dir):
         if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
@@ -176,7 +119,7 @@ def main():
 
     bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
     pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
-    
+
     topo = AppTopo(links, latencies, manifest=manifest, target=args.target)
     switchClass = configureP4Switch(
             sw_path=args.behavioral_exe,
@@ -192,11 +135,13 @@ def main():
 
     sleep(1)
 
-    shortestpath = ShortestPath(links)
+    controller = None
+    if args.auto_control_plane or 'controller_module' in conf:
+        controller = AppController(manifest=manifest, target=args.target,
+                                     topo=topo, net=net, links=links)
+        controller.start()
 
-    if args.auto_control_plane: run_control_plane(conf, topo, net, shortestpath)
 
-            
     for h in net.hosts:
         h.describe()
 
@@ -259,6 +204,8 @@ def main():
         cmds = conf['after']['cmd'] if type(conf['after']['cmd']) == list else [conf['after']['cmd']]
         for cmd in cmds:
             os.system(cmd)
+
+    if controller: controller.stop()
 
     net.stop()
 

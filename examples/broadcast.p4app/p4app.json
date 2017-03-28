@@ -5,6 +5,7 @@
     "multiswitch": {
       "bmv2_log": true,
       "pcap_dump": true,
+      "auto-control-plane": true,
       "cli": false,
       "links": [["h1", "s1"], ["h2", "s1"], ["h3", "s1"]],
       "hosts": {

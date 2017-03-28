@@ -1,5 +1,4 @@
 from apptopo import AppTopo
-import sys
 
 class CustomAppTopo(AppTopo):
 

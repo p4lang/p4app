@@ -282,8 +282,8 @@ own. Specify the name of your module with the `topo_module` option. For example:
 
 This will import the `mytopo` module, `mytopo.py`, which should be in the same
 directory as the manifest file (`p4app.json`). The module should implement the
-class `CustomAppTopo`. It can extend the default topo class, `apptopo.AppTopo`.
-For example:
+class `CustomAppTopo`. It can extend the default topo class,
+[apptopo.AppTopo](docker/scripts/mininet/apptopo.py).  For example:
 
 ```
 # mytopo.py
@@ -297,6 +297,14 @@ class CustomAppTopo(AppTopo):
 ```
 
 See the [customtopo.p4app](examples/customtopo.p4app/mytopo.py) working example.
+
+#### Custom controller
+Similarly to the `topo_module` option, you can specify a controller with the
+`controller_module` option. This module should implement the class
+`CustomAppController`. The default controller class is
+[appcontroller.AppController](docker/scripts/mininet/appcontroller.py). You can
+extend this class, as shown in the
+[customtopo.p4app](examples/customtopo.p4app/mycontroller.py) example.
 
 
 #### Logging
