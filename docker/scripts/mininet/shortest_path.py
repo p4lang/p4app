@@ -12,17 +12,18 @@ class ShortestPath:
         if b not in self.neighbors: self.neighbors[b] = []
         if a not in self.neighbors[b]: self.neighbors[b].append(a)
 
-    def get(self, a, b):
+    def get(self, a, b, exclude=lambda node: False):
         # Shortest path from a to b
-        return self._recPath(a, b, [])
+        return self._recPath(a, b, [], exclude)
 
-    def _recPath(self, a, b, visited):
+    def _recPath(self, a, b, visited, exclude):
         if a == b: return [a]
         new_visited = visited + [a]
         paths = []
         for neighbor in self.neighbors[a]:
             if neighbor in new_visited: continue
-            path = self._recPath(neighbor, b, new_visited)
+            if exclude(neighbor) and neighbor != b: continue
+            path = self._recPath(neighbor, b, new_visited, exclude)
             if path: paths.append(path)
 
         paths.sort(key=len)

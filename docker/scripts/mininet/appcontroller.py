@@ -52,27 +52,39 @@ class AppController:
                 'table_set_default forward _drop',
                 'table_set_default ipv4_lpm _drop']
 
-
         for host_name in self.topo._host_links:
-            link = self.topo._host_links[host_name]
             h = self.net.get(host_name)
-            h.setARP(link['sw_ip'], link['sw_mac'])
+            for link in self.topo._host_links[host_name].values():
+                sw = link['sw']
+                entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
+                entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
+                entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
+                iface = h.intfNames()[link['idx']]
+                h.cmd('ifconfig %s %s hw ether %s' % (iface, link['host_ip'], link['host_mac']))
+                h.cmd('arp -i %s -s %s %s' % (iface, link['sw_ip'], link['sw_mac']))
+                h.cmd('ethtool --offload %s rx off tx off' % iface)
+                h.cmd('ip route add %s dev %s' % (link['sw_ip'], iface))
             h.setDefaultRoute("via %s" % link['sw_ip'])
-            sw = link['sw']
-            entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
-            entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
-            entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
 
         for h in self.net.hosts:
+            h_link = self.topo._host_links[h.name].values()[0]
             for sw in self.net.switches:
-                path = shortestpath.get(sw.name, h.name)
+                path = shortestpath.get(sw.name, h.name, exclude=lambda n: n[0]=='h')
                 if not path: continue
                 if not path[1][0] == 's': continue # next hop is a switch
                 sw_link = self.topo._sw_links[sw.name][path[1]]
-                h_link = self.topo._host_links[h.name]
                 entries[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
                 entries[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
                 entries[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
+
+            for h2 in self.net.hosts:
+                if h == h2: continue
+                path = shortestpath.get(h.name, h2.name, exclude=lambda n: n[0]=='h')
+                if not path: continue
+                h_link = self.topo._host_links[h.name][path[1]]
+                h2_link = self.topo._host_links[h2.name].values()[0]
+                h.cmd('ip route add %s via %s' % (h2_link['host_ip'], h_link['sw_ip']))
+
 
         for sw_name in entries:
             sw = self.net.get(sw_name)
