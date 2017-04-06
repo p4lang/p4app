@@ -59,6 +59,8 @@ args = parser.parse_args()
 
 next_thrift_port = args.thrift_port
 
+def run_command(command):
+    return os.WEXITSTATUS(os.system(command))
 
 def configureP4Switch(**switch_args):
     class ConfiguredP4Switch(P4Switch):
@@ -79,9 +81,11 @@ def main():
     conf = manifest['targets'][args.target]
     params = conf['parameters'] if 'parameters' in conf else {}
 
+    os.environ.update(dict(map(lambda (k,v): (k, str(v)), params.iteritems())))
+
     def formatParams(s):
         for param in params:
-            s = s.replace('%'+param+'%', str(params[param]))
+            s = s.replace('{'+param+'}', str(params[param]))
         return s
 
     AppTopo = apptopo.AppTopo
@@ -100,6 +104,7 @@ def main():
     if not os.path.isdir(args.log_dir):
         if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
         os.mkdir(args.log_dir)
+    os.environ['P4APP_LOGDIR'] = args.log_dir
 
 
     links = [l[:2] for l in conf['links']]
@@ -157,7 +162,6 @@ def main():
 
     def formatCmd(cmd):
         cmd = formatParams(cmd)
-        cmd = cmd.replace('%log_dir%', args.log_dir)
         for h in net.hosts:
             cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
         return cmd
@@ -172,6 +176,8 @@ def main():
             stdout_files[host_name].flush()
             stdout_files[host_name].close()
 
+    print '\n'.join(map(lambda (k,v): "%s: %s"%(k,v), params.iteritems())) + '\n'
+
     for host_name in sorted(conf['hosts'].keys()):
         host = conf['hosts'][host_name]
         if 'cmd' not in host: continue
@@ -181,7 +187,7 @@ def main():
         stdout_files[h.name] = open(stdout_filename, 'w')
         cmd = formatCmd(host['cmd'])
         print h.name, cmd
-        p = h.popen(cmd, stdout=stdout_files[h.name])
+        p = h.popen(cmd, stdout=stdout_files[h.name], shell=True, preexec_fn=os.setpgrp)
         if 'startup_sleep' in host: sleep(host['startup_sleep'])
 
         if 'wait' in host and host['wait']:
@@ -193,13 +199,17 @@ def main():
         if 'wait' in conf['hosts'][host_name] and conf['hosts'][host_name]['wait']:
             _wait_for_exit(p, host_name)
 
+
     for p, host_name in host_procs:
         if 'wait' in conf['hosts'][host_name] and conf['hosts'][host_name]['wait']:
             continue
         if p.returncode is None:
-            p.send_signal(signal.SIGINT)
+            run_command('pkill -INT -P %d' % p.pid)
             sleep(0.2)
-            if p.returncode is None: p.kill()
+            rc = run_command('pkill -0 -P %d' % p.pid) # check if it's still running
+            if rc == 0: # the process group is still running, send TERM
+                sleep(1) # give it a little more time to exit gracefully
+                run_command('pkill -TERM -P %d' % p.pid)
         _wait_for_exit(p, host_name)
 
     if 'after' in conf and 'cmd' in conf['after']:
