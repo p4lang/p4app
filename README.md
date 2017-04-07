@@ -197,12 +197,12 @@ automatically configured with l2 and l3 rules for routing traffic to all hosts
   ],
   "hosts": {
     "h1": {
-      "cmd": "python echo_server.py %port%",
+      "cmd": "python echo_server.py $port",
       "startup_sleep": 0.2,
       "wait": false
     },
     "h2": {
-      "cmd": "python echo_client.py h1 %port% %echo_msg%",
+      "cmd": "python echo_client.py h1 $port $echo_msg",
       "wait": true
     }
   },
@@ -231,9 +231,9 @@ with the following options:
  - `latency` - the latency between this host and the switch. This can either be a number (interpreted as seconds) or a string with time units (e.g. `50ms` or `1s`). This overrides the latency set in the `links` object.
 
 The command is formatted by replacing the hostnames (e.g. `h1`) with the
-corresponding IP address, and the parameters (surrounded by '%', e.g.
-`%port%`) with their corresponding values. The parameters should be defined in
-the multiswitch target in the manifest. For example, have a look at the
+corresponding IP address. The parameters specified in the target will be
+available to the command as environment variables (i.e. `$` followed by the
+variable name). For an example, have a look at the
 [manifest](examples/multiswitch.p4app/p4app.json) for the multiswitch example
 app.
 
