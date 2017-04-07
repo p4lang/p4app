@@ -85,7 +85,8 @@ def main():
 
     def formatParams(s):
         for param in params:
-            s = s.replace('{'+param+'}', str(params[param]))
+            s = s.replace('$'+param, str(params[param]))
+            s = s.replace('${'+param+'}', str(params[param]))
         return s
 
     AppTopo = apptopo.AppTopo
