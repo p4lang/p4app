@@ -22,6 +22,7 @@ import subprocess
 import argparse
 import json
 import importlib
+import re
 from time import sleep
 
 from mininet.net import Mininet
@@ -85,7 +86,7 @@ def main():
 
     def formatParams(s):
         for param in params:
-            s = s.replace('$'+param, str(params[param]))
+            s = re.sub('\$'+param+'(\W|$)', str(params[param]) + r'\1', s)
             s = s.replace('${'+param+'}', str(params[param]))
         return s
 
@@ -162,7 +163,6 @@ def main():
 
 
     def formatCmd(cmd):
-        cmd = formatParams(cmd)
         for h in net.hosts:
             cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
         return cmd
