@@ -1,16 +1,29 @@
-FROM p4lang/p4c:latest
+FROM p4lang/p4c:stable
 MAINTAINER Seth Fowler <seth@barefootnetworks.com>
 MAINTAINER Robert Soule <robert.soule@barefootnetworks.com>
 
 # Install dependencies and some useful tools.
-ENV NET_TOOLS net-tools nmap tshark
-ENV MININET_DEPS cgroup-bin \
+ENV NET_TOOLS iputils-arping \
+              iputils-ping \
+              iputils-tracepath \
+              net-tools \
+              nmap \
+              python-ipaddr \
+              python-scapy \
+              tcpdump \
+              traceroute \
+              tshark
+ENV MININET_DEPS automake \
+                 build-essential \
+                 cgroup-bin \
                  ethtool \
                  gcc \
                  help2man \
                  iperf \
                  iproute \
+                 libtool \
                  make \
+                 pkg-config \
                  psmisc \
                  socat \
                  ssh \
@@ -28,15 +41,6 @@ COPY docker/third-party/mininet /third-party/mininet
 WORKDIR /third-party/mininet
 RUN make install && \
     rm -rf /third-party/mininet
-
-# Install p4c system-wide.
-WORKDIR /p4c/build
-RUN make install
-
-# Create a volume to hold log files. This is a workaround for the old version of
-# coreutils included in Ubuntu 14.04, which contains a version of tail that
-# doesn't interact well with overlayfs.
-VOLUME /var/log
 
 # Install the scripts we use to run and test P4 apps.
 COPY docker/scripts /scripts
