@@ -18,7 +18,6 @@
 from __future__ import print_function
 from subprocess import Popen
 from threading import Thread
-import glob
 import json
 import sys
 import re
@@ -37,6 +36,7 @@ from collections import OrderedDict
 try:
     from scapy.layers.all import *
     from scapy.utils import *
+    from scapy.all import *
 except ImportError:
     pass
 
@@ -349,6 +349,12 @@ class RunBMV2(object):
         self.cli_stdin.write(cmd + "\n")
         self.cli_stdin.flush()
         self.packetDelay = 1
+
+    def get_pcap_data(self, pcap_file):
+        pkts = rdpcap(pcap_file)
+        packet = pkts[0]
+        return str(packet).encode("hex")
+
     def do_command(self, cmd):
         if self.options.verbose:
             print("STF Command:", cmd)
@@ -361,7 +367,10 @@ class RunBMV2(object):
             self.do_cli_command(self.parse_table_set_default(cmd))
         elif first == "packet":
             interface, data = nextWord(cmd)
-            data = ''.join(data.split())
+            if data.endswith(".pcap"):
+                data = self.get_pcap_data(data)
+            else:
+                data = ''.join(data.split())
             time.sleep(self.packetDelay)
             try:
                 self.interfaces[interface]._write_packet(HexToByte(data))
@@ -372,7 +381,10 @@ class RunBMV2(object):
             self.packetDelay = 0
         elif first == "expect":
             interface, data = nextWord(cmd)
-            data = ''.join(data.split())
+            if data.endswith(".pcap"):
+                data = self.get_pcap_data(data)
+            else:
+                data = ''.join(data.split())
             if data != '':
                 self.expected.setdefault(interface, []).append(data)
         else:
@@ -549,6 +561,9 @@ class RunBMV2(object):
             print("Log file:")
             print(log)
     def checkOutputs(self):
+        # Import at the top doesn't work
+        import glob
+
         if self.options.verbose:
             print("Comparing outputs")
         direction = "out"
