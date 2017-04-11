@@ -24,7 +24,7 @@ import socket
 
 class P4Host(Host):
     def config(self, **params):
-        r = super(Host, self).config(**params)
+        r = super(P4Host, self).config(**params)
 
         for off in ["rx", "tx", "sg"]:
             cmd = "/sbin/ethtool --offload %s %s off" % (self.defaultIntf().name, off)
