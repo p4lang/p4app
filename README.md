@@ -17,7 +17,7 @@ Installation
     cp p4app /usr/local/bin
     ```
 
-That's it! You're done. 
+That's it! You're done.
 
 Usage
 -----
@@ -363,6 +363,38 @@ For example:
 ```
 
 This target will invoke the python script `topo.py` to start Mininet.
+The `program` will be called with the following arguments:
+
+| Argument         | Description |
+| --------         | ----------- |
+| --behavioral-exe | Value will be the switch executable |
+| --json           | Value will be the P4 compiler output |
+| --cli            | Value will be the switch command line interface program |
+
+Example invocation:
+
+```
+PYTHONPATH=??? python2 topo.py --behavioral-exe simple_switch \
+                               --json SOME_FILE \
+                               --cli simple_switch_CLI
+```
+
+You can specify additional arguments to pass to your custom topology program by
+including them in your `program` definition as follows:
+
+```
+{
+  "program": "source_routing.p4",
+  "language": "p4-14",
+  "targets": {
+      "custom": {
+	       "program": "topo.py --num-hosts 2 --switch-config simple simple_router.config"
+      }
+  }
+}
+
+```
+
 
 stf
 ---
