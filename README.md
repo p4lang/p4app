@@ -374,9 +374,10 @@ The `program` will be called with the following arguments:
 Example invocation:
 
 ```
-PYTHONPATH=??? python2 topo.py --behavioral-exe simple_switch \
-                               --json SOME_FILE \
-                               --cli simple_switch_CLI
+PYTHONPATH=$PYTHONPATH:/scripts/mininet/ python2 topo.py \
+                        --behavioral-exe simple_switch \
+                        --json SOME_FILE \
+                        --cli simple_switch_CLI
 ```
 
 You can specify additional arguments to pass to your custom topology program by
@@ -388,13 +389,22 @@ including them in your `program` definition as follows:
   "language": "p4-14",
   "targets": {
       "custom": {
-	       "program": "topo.py --num-hosts 2 --switch-config simple simple_router.config"
+	       "program": "topo.py --num-hosts 2 --switch-config simple_router.config"
       }
   }
 }
 
 ```
 
+The `program` can find the docker container ID in the `HOSTNAME` environment
+variable so that it can output useful commands for copy/paste:
+
+```python
+import os
+container = os.environ['HOSTNAME']
+print 'Run the switch CLI as follows:'
+print '  docker exec -t -i %s %s' % (container, args.cli)
+```
 
 stf
 ---
