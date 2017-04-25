@@ -133,8 +133,8 @@ def main():
     switchClass = configureP4Switch(
             sw_path=args.behavioral_exe,
             json_path=args.json,
-            log_console=args.bmv2_log,
-            pcap_dump=args.pcap_dump)
+            log_console=bmv2_log,
+            pcap_dump=pcap_dump)
     net = Mininet(topo = topo,
                   link = TCLink,
                   host = P4Host,
