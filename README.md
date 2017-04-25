@@ -421,3 +421,17 @@ directory. If your manifest file is not called `p4app.json`, you can use the
 ```
 p4app run myapp.p4app --manifest testing.p4app
 ```
+
+#### Specify location of log directory
+By default, p4app will mount the directory `/tmp/p4app_logs` on the host to
+`/tmp/p4app_logs` on the docker container guest. The output from bmv2, as well
+as any output from your programs, will be saved to this directory.  Instead of
+using the default directory (`/tmp/p4app_logs`), you can specify another
+directory with the `$P4APP_LOGDIR` environment variable. For example, if you
+run:
+
+```
+P4APP_LOGDIR=./out p4app run myapp.p4app
+```
+
+all the log files will be stored to `./out`.
