@@ -15,6 +15,8 @@
 
 P4APP_IMAGE=${P4APP_IMAGE:-p4lang/p4app:stable}
 
+P4APP_LOGDIR=$(readlink -f "${P4APP_LOGDIR:-/tmp/p4app_logs}")
+
 function get_abs_filename() {
   # Convert a possibly-relative path to an absolute path.
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -29,7 +31,7 @@ function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
   docker run --privileged --interactive --tty --rm \
             -v $1:$APP_TO_RUN \
-            -v /tmp/p4app_logs:/tmp/p4app_logs \
+            -v "$P4APP_LOGDIR":/tmp/p4app_logs \
              $P4APP_IMAGE $APP_TO_RUN "${@:2}"
 }
 
