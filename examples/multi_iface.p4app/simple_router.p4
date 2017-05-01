@@ -11,7 +11,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
     @name("_drop") action _drop() {
         mark_to_drop();
     }
-    @name("send_frame") table send_frame() {
+    @name("send_frame") table send_frame {
         actions = {
             rewrite_mac;
             _drop;
@@ -42,7 +42,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
     @name("set_dmac") action set_dmac(bit<48> dmac) {
         hdr.ethernet.dstAddr = dmac;
     }
-    @name("ipv4_lpm") table ipv4_lpm() {
+    @name("ipv4_lpm") table ipv4_lpm {
         actions = {
             _drop;
             set_nhop;
@@ -54,7 +54,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 1024;
         default_action = NoAction();
     }
-    @name("forward") table forward() {
+    @name("forward") table forward {
         actions = {
             set_dmac;
             _drop;
