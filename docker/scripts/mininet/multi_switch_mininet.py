@@ -80,14 +80,14 @@ def main():
         manifest = json.load(f)
 
     conf = manifest['targets'][args.target]
-    params = conf['parameters'] if 'parameters' in conf else {}
-
-    os.environ.update(dict(map(lambda (k,v): (k, str(v)), params.iteritems())))
+    if 'parameters' not in conf: conf['parameters'] = {}
+    if 'hosts' not in conf: conf['hosts'] = {}
+    if 'switches' not in conf: conf['switches'] = {}
 
     def formatParams(s):
-        for param in params:
-            s = re.sub('\$'+param+'(\W|$)', str(params[param]) + r'\1', s)
-            s = s.replace('${'+param+'}', str(params[param]))
+        for param in conf['parameters']:
+            s = re.sub('\$'+param+'(\W|$)', str(conf['parameters'][param]) + r'\1', s)
+            s = s.replace('${'+param+'}', str(conf['parameters'][param]))
         return s
 
     AppTopo = apptopo.AppTopo
@@ -109,27 +109,28 @@ def main():
     os.environ['P4APP_LOGDIR'] = args.log_dir
 
 
-    links = [l[:2] for l in conf['links']]
-    latencies = dict([(''.join(sorted(l[:2])), l[2]) for l in conf['links'] if len(l)==3])
+    def formatLatency(lat):
+        if isinstance(lat, (str, unicode)): return formatParams(lat)
+        else: return str(lat) + "ms"
+
+    if 'links' not in conf: conf['links'] = []
+    if 'latencies' not in conf: conf['latencies'] = {}
+
+    conf['latencies'].update(dict((tuple(sorted(l[:2])), formatLatency(l[2])) for l in conf['links'] if len(l)==3))
+    conf['links'] = [l[:2] for l in conf['links']]
 
     for host_name in sorted(conf['hosts'].keys()):
         host = conf['hosts'][host_name]
         if 'latency' not in host: continue
-        for a, b in links:
-            if a != host_name and b != host_name: continue
-            other = a if a != host_name else b
-            latencies[host_name+other] = host['latency']
+        for l in conf['links']:
+            if host_name not in l: continue
+            conf['latencies'][tuple(sorted(l))] = formatLatency(host['latency'])
 
-    for l in latencies:
-        if isinstance(latencies[l], (str, unicode)):
-            latencies[l] = formatParams(latencies[l])
-        else:
-            latencies[l] = str(latencies[l]) + "ms"
 
     bmv2_log = args.bmv2_log or ('bmv2_log' in conf and conf['bmv2_log'])
     pcap_dump = args.pcap_dump or ('pcap_dump' in conf and conf['pcap_dump'])
 
-    topo = AppTopo(links, latencies, manifest=manifest, target=args.target)
+    topo = AppTopo(manifest=manifest, target=args.target)
     switchClass = configureP4Switch(
             sw_path=args.behavioral_exe,
             json_path=args.json,
@@ -147,7 +148,7 @@ def main():
     controller = None
     if args.auto_control_plane or 'controller_module' in conf:
         controller = AppController(manifest=manifest, target=args.target,
-                                     topo=topo, net=net, links=links)
+                                     topo=topo, net=net)
         controller.start()
 
 
@@ -167,6 +168,9 @@ def main():
             cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
         return cmd
 
+    os.environ.update(dict(map(lambda (k,v): (k, str(v)), conf['parameters'].iteritems())))
+
+
     def _wait_for_exit(p, host):
         print p.communicate()
         if p.returncode is None:
@@ -177,7 +181,7 @@ def main():
             stdout_files[host_name].flush()
             stdout_files[host_name].close()
 
-    print '\n'.join(map(lambda (k,v): "%s: %s"%(k,v), params.iteritems())) + '\n'
+    print '\n'.join(map(lambda (k,v): "%s: %s"%(k,v), conf['parameters'].iteritems())) + '\n'
 
     for host_name in sorted(conf['hosts'].keys()):
         host = conf['hosts'][host_name]
