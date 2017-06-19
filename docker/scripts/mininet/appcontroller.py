@@ -77,7 +77,6 @@ class AppController:
             if sw not in self.entries: self.entries[sw] = []
             if 'switches' not in self.conf or sw not in self.conf['switches'] or 'entries' not in self.conf['switches'][sw]:
                 continue
-            print "-----------------------"
             extra_entries = self.conf['switches'][sw]['entries']
             if type(extra_entries) == list: # array of entries
                 self.entries[sw] += extra_entries
@@ -87,12 +86,6 @@ class AppController:
     def generate_default_entries(self):
         for sw in self.topo.switches():
             if sw not in self.entries: self.entries[sw] = []
-            if 'switches' in self.conf and sw in self.conf['switches'] and 'entries' in self.conf['switches'][sw]:
-                extra_entries = self.conf['switches'][sw]['entries']
-                if type(extra_entries) == list: # array of entries
-                    self.entries[sw] += extra_entries
-                else: # path to file that contains entries
-                    self.entries[sw] += self.read_entries(extra_entries)
             self.entries[sw] += [
                 'table_set_default send_frame _drop',
                 'table_set_default forward _drop',

@@ -30,9 +30,6 @@ class AppTopo(Topo):
         for host_name in host_names:
             host_num = host_names.index(host_name)+1
 
-            host_ip = "10.0.%d.10" % host_num
-            host_mac = '00:04:00:00:00:%02x' % host_num
-
             self.addHost(host_name)
 
             self._host_links[host_name] = {}
@@ -44,13 +41,15 @@ class AppTopo(Topo):
                 assert sw in sw_names, "Hosts should be connected to switches, not " + str(sw)
                 sw_num = sw_names.index(sw)+1
 
+                host_mac = '00:04:00:00:%02x:%02x' % (host_num, sw_idx+1)
+
                 delay_key = tuple(sorted([host_name, sw]))
                 delay = self.conf['latencies'][delay_key] if delay_key in self.conf['latencies'] else '0ms'
                 self._port_map[sw][host_name] = len(self._port_map[sw])+1
                 self._host_links[host_name][sw] = dict(
                         idx=sw_idx,
                         host_mac = host_mac,
-                        host_ip = host_ip,
+                        host_ip = "10.0.%d.%d" % (host_num, 100+sw_idx+1),
                         sw = sw,
                         sw_mac = "00:aa:00:%02x:00:%02x" % (sw_num, host_num),
                         sw_ip = "10.0.%d.%d" % (host_num, sw_idx+1),
