@@ -1,4 +1,4 @@
-FROM p4lang/p4c:stable
+FROM p4lang/p4c:latest
 MAINTAINER Seth Fowler <seth@barefootnetworks.com>
 MAINTAINER Robert Soule <robert.soule@barefootnetworks.com>
 
