@@ -3,7 +3,7 @@
 
 typedef bit<48> EthernetAddress;
 typedef bit<32> IPv4Address;
-typedef bit<4> PortId;
+typedef bit<9> PortId;
 
 // Physical Ports
 const PortId DROP_PORT = 0xF;
