@@ -141,15 +141,17 @@ def main():
                   host = P4Host,
                   switch = switchClass,
                   controller = None)
-    net.start()
-
-    sleep(1)
 
     controller = None
     if args.auto_control_plane or 'controller_module' in conf:
         controller = AppController(manifest=manifest, target=args.target,
                                      topo=topo, net=net)
-        controller.start()
+
+    net.start()
+
+    sleep(1)
+
+    if controller: controller.start()
 
 
     for h in net.hosts:
