@@ -23,13 +23,23 @@ class AppController:
                 entries.append(line)
         return entries
 
+    def parse_cli_output(self, s):
+        parsed = dict(raw=s)
+        if 'node was created with handle' in s:
+            parsed['handle'] = int(s.split('node was created with handle', 1)[-1].split()[0])
+        return parsed
+
     def add_entries(self, thrift_port=9090, sw=None, entries=None):
         assert entries is not None
         if sw: thrift_port = sw.thrift_port
 
         print '\n'.join(entries)
-        p = subprocess.Popen(['simple_switch_CLI', '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE)
-        p.communicate(input='\n'.join(entries))
+        p = subprocess.Popen(['simple_switch_CLI', '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        stdout, nostderr = p.communicate(input='\n'.join(entries))
+        print stdout
+        raw_results = stdout.split('RuntimeCmd:')[1:len(entries)+1]
+        parsed_results = map(self.parse_cli_output, raw_results)
+        return parsed_results
 
     def read_register(self, register, idx, thrift_port=9090, sw=None):
         if sw: thrift_port = sw.thrift_port
