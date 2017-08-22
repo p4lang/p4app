@@ -34,6 +34,7 @@ from mininet.cli import CLI
 from p4_mininet import P4Switch, P4Host
 import apptopo
 import appcontroller
+import appprocrunner
 
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--behavioral-exe', help='Path to behavioral executable',
@@ -92,16 +93,22 @@ def main():
 
     AppTopo = apptopo.AppTopo
     AppController = appcontroller.AppController
+    AppProcRunner = appprocrunner.AppProcRunner
+
+    if 'topo_module' in conf or 'controller_module' in conf or 'procrunner_module' in conf:
+        sys.path.insert(0, os.path.dirname(args.manifest))
 
     if 'topo_module' in conf:
-        sys.path.insert(0, os.path.dirname(args.manifest))
         topo_module = importlib.import_module(conf['topo_module'])
         AppTopo = topo_module.CustomAppTopo
 
     if 'controller_module' in conf:
-        sys.path.insert(0, os.path.dirname(args.manifest))
         controller_module = importlib.import_module(conf['controller_module'])
         AppController = controller_module.CustomAppController
+
+    if 'procrunner_module' in conf:
+        procrunner_module = importlib.import_module(conf['procrunner_module'])
+        AppProcRunner = procrunner_module.CustomAppProcRunner
 
     if not os.path.isdir(args.log_dir):
         if os.path.exists(args.log_dir): raise Exception('Log dir exists and is not a dir')
@@ -160,69 +167,10 @@ def main():
     if args.cli or ('cli' in conf and conf['cli']):
         CLI(net)
 
-    stdout_files = dict()
-    return_codes = []
-    host_procs = []
+    proc_runner = AppProcRunner(manifest=manifest, target=args.target,
+                                    topo=topo, net=net, log_dir=args.log_dir)
 
-
-    def formatCmd(cmd):
-        for h in net.hosts:
-            cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
-        return cmd
-
-    os.environ.update(dict(map(lambda (k,v): (k, str(v)), conf['parameters'].iteritems())))
-
-
-    def _wait_for_exit(p, host):
-        print p.communicate()
-        if p.returncode is None:
-            p.wait()
-            print p.communicate()
-        return_codes.append(p.returncode)
-        if host_name in stdout_files:
-            stdout_files[host_name].flush()
-            stdout_files[host_name].close()
-
-    print '\n'.join(map(lambda (k,v): "%s: %s"%(k,v), conf['parameters'].iteritems())) + '\n'
-
-    for host_name in sorted(conf['hosts'].keys()):
-        host = conf['hosts'][host_name]
-        if 'cmd' not in host: continue
-
-        h = net.get(host_name)
-        stdout_filename = os.path.join(args.log_dir, h.name + '.stdout')
-        stdout_files[h.name] = open(stdout_filename, 'w')
-        cmd = formatCmd(host['cmd'])
-        print h.name, cmd
-        p = h.popen(cmd, stdout=stdout_files[h.name], shell=True, preexec_fn=os.setpgrp)
-        if 'startup_sleep' in host: sleep(host['startup_sleep'])
-
-        if 'wait' in host and host['wait']:
-            _wait_for_exit(p, host_name)
-        else:
-            host_procs.append((p, host_name))
-
-    for p, host_name in host_procs:
-        if 'wait' in conf['hosts'][host_name] and conf['hosts'][host_name]['wait']:
-            _wait_for_exit(p, host_name)
-
-
-    for p, host_name in host_procs:
-        if 'wait' in conf['hosts'][host_name] and conf['hosts'][host_name]['wait']:
-            continue
-        if p.returncode is None:
-            run_command('pkill -INT -P %d' % p.pid)
-            sleep(0.2)
-            rc = run_command('pkill -0 -P %d' % p.pid) # check if it's still running
-            if rc == 0: # the process group is still running, send TERM
-                sleep(1) # give it a little more time to exit gracefully
-                run_command('pkill -TERM -P %d' % p.pid)
-        _wait_for_exit(p, host_name)
-
-    if 'after' in conf and 'cmd' in conf['after']:
-        cmds = conf['after']['cmd'] if type(conf['after']['cmd']) == list else [conf['after']['cmd']]
-        for cmd in cmds:
-            os.system(cmd)
+    proc_runner.runall()
 
     if controller: controller.stop()
 
@@ -233,8 +181,7 @@ def main():
     if pcap_dump:
         os.system('bash -c "cp *.pcap \'%s\'"' % args.log_dir)
 
-    bad_codes = [rc for rc in return_codes if rc != 0]
-    if len(bad_codes): sys.exit(1)
+    if proc_runner.hadError(): sys.exit(1)
 
 if __name__ == '__main__':
     setLogLevel( 'info' )
