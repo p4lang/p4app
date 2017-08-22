@@ -1,3 +1,5 @@
+import subprocess
+import re
 from time import sleep
 import os
 
@@ -47,21 +49,39 @@ class AppProcess:
 
         return self.proc.returncode
 
+    def run_command(self, command):
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+        p.wait()
+        stdout, stderr = p.communicate()
+        return (p.returncode, stdout, stderr)
+
+    def killTree(self):
+        _, stdout, _ = self.run_command('pstree -p %d' % self.proc.pid)
+        descendants = re.findall("\(([^)]*)\)", stdout)
+
+        cmd = 'kill -INT %s' % ' '.join(descendants)
+        rc, stdout, _ = self.run_command(cmd)
+
+        print "Sent INT to children of PID %d: `%s`. Return code: %d" % (self.proc.pid, cmd, rc)
 
     def kill(self):
         if self.proc.returncode is not None: # already exited
-            return self.proc.returncode
+            return
 
-        run_command('pkill -INT -P %d' % self.proc.pid)
+        self.run_command('pkill -INT -P %d' % self.proc.pid)
         sleep(0.2)
-        rc = run_command('pkill -0 -P %d' % self.proc.pid) # check if it's still running
-        if rc == 0: # the process group is still running, send TERM
-            sleep(1) # give it a little more time to exit gracefully
-            run_command('pkill -TERM -P %d' % self.proc.pid)
-        return self.proc.returncode
 
-def run_command(command):
-    return os.WEXITSTATUS(os.system(command))
+        rc, _, _ = self.run_command('pkill -0 -P %d' % self.proc.pid) # check if it's still running
+        if rc != 0: # the process group is not running
+            return
+
+        sleep(0.5) # give it a little more time to exit gracefully
+
+        rc, _, _ = self.run_command('pkill -0 -P %d' % self.proc.pid) # check if it's still running
+        if rc != 0: # the process group is not running
+            return
+
+        self.killTree()
 
 
 class AppProcRunner:
