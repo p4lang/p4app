@@ -309,6 +309,16 @@ Similarly to the `topo_module` option, you can specify a controller with the
 extend this class, as shown in the
 [customtopo.p4app](examples/customtopo.p4app/mycontroller.py) example.
 
+### Custom host process runner
+The AppProcRunner class is responsible for executing programs in each of the
+mininet hosts. By specifying the `controller_module` option, you can override
+the default behaviour for launching and killing programs on the hosts. This
+module should implement the class `CustomAppProcRunner`. The default controller
+class is
+[appprocrunner.AppProcRunner](docker/scripts/mininet/appprocrunner.py). You can
+extend this class, as shown in the
+[customtopo.p4app](examples/customtopo.p4app/myprocrunner.py) example.
+
 
 #### Logging
 When this target is run, a temporary directory on the host, `/tmp/p4app_log`,
