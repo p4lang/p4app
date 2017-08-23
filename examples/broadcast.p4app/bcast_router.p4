@@ -40,7 +40,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         hdr.ipv4.ttl = hdr.ipv4.ttl + 8w255;
     }
     action broadcast() {
-        meta.intrinsic_metadata.mcast_grp = 1;
+        standard_metadata.mcast_grp = 1;
         meta.ingress_metadata.nhop_ipv4 = hdr.ipv4.dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl + 8w255;
     }
