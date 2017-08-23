@@ -25,7 +25,7 @@
       },
       "switches": {
           "s1": {
-              "entries": "commands.txt"
+              "commands": "commands.txt"
           }
       }
     }

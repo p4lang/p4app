@@ -10,45 +10,44 @@ class AppController:
         self.conf = manifest['targets'][target]
         self.topo = topo
         self.net = net
-        self.entries = dict()
+        self.commands = dict()
         self.shortestpath = ShortestPath(self.conf['links'])
 
-    def read_entries(self, filename):
-        entries = []
+    def readCommands(self, filename):
+        commands = []
         with open(filename, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line == '': continue
                 if line[0] == '#': continue # ignore comments
-                entries.append(line)
-        return entries
+                commands.append(line)
+        return commands
 
-    def parse_cli_output(self, s):
+    def parseCliOutput(self, s):
         parsed = dict(raw=s)
         if 'node was created with handle' in s:
             parsed['handle'] = int(s.split('node was created with handle', 1)[-1].split()[0])
         return parsed
 
-    def add_entries(self, thrift_port=9090, sw=None, entries=None):
-        assert entries is not None
+    def sendCommands(self, commands, thrift_port=9090, sw=None):
         if sw: thrift_port = sw.thrift_port
 
-        print '\n'.join(entries)
+        print '\n'.join(commands)
         p = subprocess.Popen(['simple_switch_CLI', '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, nostderr = p.communicate(input='\n'.join(entries))
+        stdout, nostderr = p.communicate(input='\n'.join(commands))
         print stdout
-        raw_results = stdout.split('RuntimeCmd:')[1:len(entries)+1]
-        parsed_results = map(self.parse_cli_output, raw_results)
+        raw_results = stdout.split('RuntimeCmd:')[1:len(commands)+1]
+        parsed_results = map(self.parseCliOutput, raw_results)
         return parsed_results
 
-    def read_register(self, register, idx, thrift_port=9090, sw=None):
+    def readRegister(self, register, idx, thrift_port=9090, sw=None):
         if sw: thrift_port = sw.thrift_port
         p = subprocess.Popen(['simple_switch_CLI', '--thrift-port', str(thrift_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate(input="register_read %s %d" % (register, idx))
         reg_val = filter(lambda l: ' %s[%d]' % (register, idx) in l, stdout.split('\n'))[0].split('= ', 1)[1]
         return long(reg_val)
 
-    def configure_hosts(self):
+    def configureHosts(self):
         for host_name in self.topo._host_links:
             h = self.net.get(host_name)
             for link in self.topo._host_links[host_name].values():
@@ -69,34 +68,34 @@ class AppController:
                 h.cmd('ip route add %s via %s' % (h2_link['host_ip'], h_link['sw_ip']))
 
     def start(self):
-        self.generate_entries()
-        self.setup_entries()
-        self.configure_hosts()
+        self.generateCommands()
+        self.sendGeneratedCommands()
+        self.configureHosts()
 
-    def generate_entries(self):
-        self.load_entries_files()
-        self.generate_default_entries()
+    def generateCommands(self):
+        self.loadCommandFiles()
+        self.generateDefaultCommands()
 
-    def setup_entries(self):
-        for sw_name in self.entries:
+    def sendGeneratedCommands(self):
+        for sw_name in self.commands:
             sw = self.net.get(sw_name)
-            self.add_entries(sw=sw, entries=self.entries[sw_name])
+            self.sendCommands(self.commands[sw_name], sw=sw)
 
-    def load_entries_files(self):
+    def loadCommandFiles(self):
         for sw in self.topo.switches():
-            if sw not in self.entries: self.entries[sw] = []
-            if 'switches' not in self.conf or sw not in self.conf['switches'] or 'entries' not in self.conf['switches'][sw]:
+            if sw not in self.commands: self.commands[sw] = []
+            if 'switches' not in self.conf or sw not in self.conf['switches'] or 'commands' not in self.conf['switches'][sw]:
                 continue
-            extra_entries = self.conf['switches'][sw]['entries']
-            if type(extra_entries) == list: # array of entries
-                self.entries[sw] += extra_entries
-            else: # path to file that contains entries
-                self.entries[sw] += self.read_entries(extra_entries)
+            extra_commands = self.conf['switches'][sw]['commands']
+            if type(extra_commands) == list: # array of commands
+                self.commands[sw] += extra_commands
+            else: # path to file that contains commands
+                self.commands[sw] += self.readCommands(extra_commands)
 
-    def generate_default_entries(self):
+    def generateDefaultCommands(self):
         for sw in self.topo.switches():
-            if sw not in self.entries: self.entries[sw] = []
-            self.entries[sw] += [
+            if sw not in self.commands: self.commands[sw] = []
+            self.commands[sw] += [
                 'table_set_default send_frame _drop',
                 'table_set_default forward _drop',
                 'table_set_default ipv4_lpm _drop']
@@ -105,9 +104,9 @@ class AppController:
             h = self.net.get(host_name)
             for link in self.topo._host_links[host_name].values():
                 sw = link['sw']
-                self.entries[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
-                self.entries[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
-                self.entries[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
+                self.commands[sw].append('table_add send_frame rewrite_mac %d => %s' % (link['sw_port'], link['sw_mac']))
+                self.commands[sw].append('table_add forward set_dmac %s => %s' % (link['host_ip'], link['host_mac']))
+                self.commands[sw].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (link['host_ip'], link['host_ip'], link['sw_port']))
 
 
         for h in self.net.hosts:
@@ -117,9 +116,9 @@ class AppController:
                 if not path: continue
                 if not path[1] in self.topo._port_map: continue # next hop is a switch
                 sw_link = self.topo._sw_links[sw.name][path[1]]
-                self.entries[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
-                self.entries[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
-                self.entries[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
+                self.commands[sw.name].append('table_add send_frame rewrite_mac %d => %s' % (sw_link[0]['port'], sw_link[0]['mac']))
+                self.commands[sw.name].append('table_add forward set_dmac %s => %s' % (h_link['host_ip'], sw_link[1]['mac']))
+                self.commands[sw.name].append('table_add ipv4_lpm set_nhop %s/32 => %s %d' % (h_link['host_ip'], h_link['host_ip'], sw_link[0]['port']))
 
 
     def stop(self):

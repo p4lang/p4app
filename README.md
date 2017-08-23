@@ -241,11 +241,11 @@ app.
 Currently, each host can be connected to at most one switch.
 
 
-#### Specifying entries for each switch
+#### Specifying entries (commands) for each switch
 The routing tables (`ipv4_lpm`, `send_frame` and `forward`) are automatically
-populated with this target. Additionally, you can specify custom entries to be
-added to each switch. You can either include a commands file, or an array of
-entries. These custom entries will have precedence over the automatically
+populated with this target. Additionally, you can specify custom commands to be
+run on each switch. You can either include a commands file, or an array of
+commands. These custom commands will be sent before the automatically
 generated ones for the routing tables. For example:
 
 ```
@@ -254,10 +254,10 @@ generated ones for the routing tables. For example:
   "hosts": { ... },
   "switches": {
     "s1": {
-      "entries": "s1_commands.txt"
+      "commands": "s1_commands.txt"
     },
     "s2": {
-      "entries": [
+      "commands": [
         "table_add ipv4_lpm set_nhop 10.0.1.10/32 => 10.0.1.10 1",
         "table_add ipv4_lpm set_nhop 10.0.2.10/32 => 10.0.2.10 2"
       ]
@@ -266,9 +266,9 @@ generated ones for the routing tables. For example:
 }
 ```
 
-If the entries for `s2` above overlap with the automatically generated entries
+If the commands for `s2` above overlap with the automatically generated commands
 (e.g. there is an automatic entry for `set_nhop 10.0.1.10/32`), these custom
-entries will have precedence and you will see a warning about a duplicate entry
+commands will have precedence and you will see a warning about a duplicate entry
 while the tables are being populated.
 
 #### Custom topology class
@@ -308,6 +308,16 @@ Similarly to the `topo_module` option, you can specify a controller with the
 [appcontroller.AppController](docker/scripts/mininet/appcontroller.py). You can
 extend this class, as shown in the
 [customtopo.p4app](examples/customtopo.p4app/mycontroller.py) example.
+
+### Custom host process runner
+The AppProcRunner class is responsible for executing programs in each of the
+mininet hosts. By specifying the `controller_module` option, you can override
+the default behaviour for launching and killing programs on the hosts. This
+module should implement the class `CustomAppProcRunner`. The default controller
+class is
+[appprocrunner.AppProcRunner](docker/scripts/mininet/appprocrunner.py). You can
+extend this class, as shown in the
+[customtopo.p4app](examples/customtopo.p4app/myprocrunner.py) example.
 
 
 #### Logging
