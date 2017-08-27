@@ -15,7 +15,13 @@
 
 P4APP_IMAGE=${P4APP_IMAGE:-p4lang/p4app:latest}
 
-P4APP_LOGDIR=$(readlink -f "${P4APP_LOGDIR:-/tmp/p4app_logs}")
+
+myrealpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+P4APP_LOGDIR=$(myrealpath "${P4APP_LOGDIR:-/tmp/p4app_logs}")
+
 
 function get_abs_filename() {
   # Convert a possibly-relative path to an absolute path.
