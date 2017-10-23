@@ -7,7 +7,7 @@
       "pcap_dump": true,
       "auto-control-plane": true,
       "cli": false,
-      "links": [["h1", "s1"], ["h2", "s1"], ["h3", "s1"]],
+      "links": [["h1", "s1"], ["h2", "s1"], ["h3", "s1"], ["h4", "s1"]],
       "hosts": {
         "h1": {
             "cmd": "./bcast_listen.py",
@@ -19,13 +19,21 @@
             "wait": false
         },
         "h3": {
+            "cmd": "./bcast_listen.py",
+            "wait": false
+        },
+        "h4": {
             "cmd": "./bcast_send.py",
             "wait": true
         }
       },
       "switches": {
           "s1": {
-              "commands": "commands.txt"
+              "commands": [
+                "commands_ipv4.txt",
+                "commands_forward.txt"
+              ],
+              "mcast_groups": "mcast_groups.txt"
           }
       }
     }
