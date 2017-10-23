@@ -108,9 +108,21 @@ function update-command {
   docker pull $P4APP_IMAGE
 }
 
-function mn-command {
+function exec-command {
   container_id=$(docker ps | grep -m1 p4app_ | awk '{print $1}')
-  docker exec -it $container_id mn-m ${@:1}
+
+  if [ -z "$container_id" ]; then
+      (>&2 echo "Couldn't find any p4app currently running.")
+      exit 1
+  fi
+
+  if [ -t 1 ]; then
+      # Called from a terminal, be interactive
+      docker exec -it $container_id ${@:1}
+  else
+      # Inside a pipe, don't allocate a ptty
+      docker exec $container_id ${@:1}
+  fi
 }
 
 function usage-command {
@@ -125,8 +137,8 @@ function usage-command {
   echo "      Expand a p4app file into a directory, in-place."
   echo "  p4app update"
   echo "      Update the toolchain to the newest version."
-  echo "  p4app mn <host> <command>"
-  echo "      Run a command on a Mininet host of a currently running p4app."
+  echo "  p4app exec <command>"
+  echo "      Execute a command on the most recent p4app instance."
   exit 1
 }
 
@@ -143,8 +155,8 @@ case "$1" in
   "update")
     update-command "${@:2}"
     ;;
-  "mn")
-    mn-command "${@:2}"
+  "exec")
+    exec-command "${@:2}"
     ;;
   *)
     usage-command
