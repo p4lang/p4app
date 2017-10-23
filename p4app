@@ -36,6 +36,7 @@ function normalize_path() {
 function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
   docker run --privileged --interactive --tty --rm \
+            --name "p4app_$RANDOM" \
             -v $1:$APP_TO_RUN \
             -v "$P4APP_LOGDIR":/tmp/p4app_logs \
              $P4APP_IMAGE $APP_TO_RUN "${@:2}"
@@ -107,6 +108,11 @@ function update-command {
   docker pull $P4APP_IMAGE
 }
 
+function mn-command {
+  container_id=$(docker ps | grep -m1 p4app_ | awk '{print $1}')
+  docker exec -it $container_id mn-m ${@:1}
+}
+
 function usage-command {
   echo "Usage:"
   echo "  p4app run <program.p4app>"
@@ -119,6 +125,8 @@ function usage-command {
   echo "      Expand a p4app file into a directory, in-place."
   echo "  p4app update"
   echo "      Update the toolchain to the newest version."
+  echo "  p4app mn <host> <command>"
+  echo "      Run a command on a Mininet host of a currently running p4app."
   exit 1
 }
 
@@ -134,6 +142,9 @@ case "$1" in
     ;;
   "update")
     update-command "${@:2}"
+    ;;
+  "mn")
+    mn-command "${@:2}"
     ;;
   *)
     usage-command

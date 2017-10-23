@@ -27,6 +27,7 @@ ENV MININET_DEPS automake \
                  psmisc \
                  socat \
                  ssh \
+                 sudo \
                  telnet \
                  pep8 \
                  pyflakes \
@@ -39,6 +40,7 @@ RUN apt-get update && \
 # Install mininet.
 COPY docker/third-party/mininet /third-party/mininet
 WORKDIR /third-party/mininet
+RUN cp util/m /usr/local/bin/mn-m
 RUN make install && \
     rm -rf /third-party/mininet
 
