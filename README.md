@@ -334,7 +334,7 @@ files will be saved to `/tmp/p4app_log`. For example usage, see the
 
 #### Cleanup commands
 If you need to execute commands in the docker container after running the
-target (and before mininet is stopped), you can use `after`. `after` should
+target (and before Mininet is stopped), you can use `after`. `after` should
 contain `cmd`, which can either be a command or a list of commands. For
 example:
 
@@ -487,3 +487,30 @@ P4APP_LOGDIR=./out p4app run myapp.p4app
 ```
 
 all the log files will be stored to `./out`.
+
+
+Executing Commands Interactively
+================================
+
+To run commands interactively on a currently running p4app, you can use
+
+```
+p4app exec command arg1 arg2 ...
+```
+
+This will run a command in a currently running p4app instance. If there are
+multiple instances running, the command will be executed on the most recently
+started p4app.
+
+To run a command on a Mininet host, you can use the Mininet `m` utility script,
+which is included in p4app. For example, run `ping` on Mininet host `h1`:
+
+```
+p4app exec m h1 ping 10.0.2.101
+```
+
+You can also run `tcpdump` on the Mininet host to see packets in realtime with
+Wireshark:
+```
+p4app exec m h1 tcpdump -Uw - | wireshark -ki -
+```
