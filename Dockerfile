@@ -27,6 +27,7 @@ ENV MININET_DEPS automake \
                  psmisc \
                  socat \
                  ssh \
+                 sudo \
                  telnet \
                  pep8 \
                  pyflakes \
@@ -36,9 +37,13 @@ ENV MININET_DEPS automake \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $NET_TOOLS $MININET_DEPS
 
+# Fix to get tcpdump working
+RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
+
 # Install mininet.
 COPY docker/third-party/mininet /third-party/mininet
 WORKDIR /third-party/mininet
+RUN cp util/m /usr/local/bin/m
 RUN make install && \
     rm -rf /third-party/mininet
 
