@@ -33,6 +33,21 @@ function normalize_path() {
   echo ${1%/}
 }
 
+function build-command {
+  if [ -z $2 ]; then
+      OUTPUT_FILE="out.json"
+  else
+      OUTPUT_FILE="$2"
+  fi
+
+  run-command $1 --build-only "${@:3}"
+  rc=$?
+
+  [ $rc -eq 0 ] && cp "$P4APP_LOGDIR/program.json" $OUTPUT_FILE
+
+  exit $rc
+}
+
 function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
   docker run --privileged --interactive --tty --rm \
@@ -62,7 +77,7 @@ function run-command {
     echo "Couldn't read p4app package: $1"
     exit 1
   fi
-  exit $rc
+  return $rc
 }
 
 function pack-command {
@@ -113,6 +128,8 @@ function usage-command {
   echo "      Run a p4app."
   echo "  p4app run <program.p4app> <target>"
   echo "      Run a p4app, specifying a target."
+  echo "  p4app build <program.p4app> <out.json>"
+  echo "      Build a p4app, specifying the output JSON filename."
   echo "  p4app pack <program.p4app>"
   echo "      Compress a p4app directory into a single file, in-place."
   echo "  p4app unpack <program.p4app>"
@@ -125,6 +142,9 @@ function usage-command {
 case "$1" in
   "run")
     run-command "${@:2}"
+    ;;
+  "build")
+    build-command "${@:2}"
     ;;
   "pack")
     pack-command "${@:2}"

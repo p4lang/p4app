@@ -1,6 +1,0 @@
-table_add ipv4_lpm broadcast 255.255.255.255/32 =>
-table_add forward set_dmac 255.255.255.255 => ff:ff:ff:ff:ff:ff
-
-mc_mgrp_create 1
-mc_node_create 0 1 2 3
-mc_node_associate 1 0

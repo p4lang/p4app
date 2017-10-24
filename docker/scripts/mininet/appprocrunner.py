@@ -40,10 +40,10 @@ class AppProcess:
             self.stdout_file.close()
 
     def waitForExit(self):
-        print self.proc.communicate()
+        print self.host.name, self.proc.communicate()
         if self.proc.returncode is None:
             self.proc.wait()
-            print self.proc.communicate()
+            print self.host.name, self.proc.communicate()
 
         self.cleanup()
 
