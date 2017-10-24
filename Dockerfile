@@ -34,6 +34,10 @@ ENV MININET_DEPS automake \
                  pylint \
                  python-pexpect \
                  python-setuptools
+
+# Ignore questions when installing with apt-get:
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $NET_TOOLS $MININET_DEPS
 
