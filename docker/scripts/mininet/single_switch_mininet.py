@@ -39,7 +39,7 @@ parser.add_argument('--json', help='Path to JSON config file',
 parser.add_argument('--log-file', help='Path to write the switch log file',
                     type=str, action="store", required=False)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
-                    type=str, action="store", required=False, default=False)
+                   action="store_true")
 parser.add_argument('--switch-config', help='simple_switch_CLI script to configure switch',
                     type=str, action="store", required=False, default=False)
 parser.add_argument('--cli-message', help='Message to print before starting CLI',
@@ -127,6 +127,9 @@ def main():
 
     CLI( net )
     net.stop()
+
+    if pcap_dump:
+        os.system('bash -c "cp *.pcap \'%s\'"' % '/tmp/p4app_logs')
 
 if __name__ == '__main__':
     setLogLevel( 'info' )

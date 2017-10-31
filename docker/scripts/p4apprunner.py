@@ -178,6 +178,9 @@ def run_mininet(manifest):
 
     switch_args.append('--cli-message "%s"' % message_file)
 
+    if 'pcap_dump' in manifest.target_config and manifest.target_config['pcap_dump']:
+        switch_args.append('--pcap-dump')
+
     if 'num-hosts' in manifest.target_config:
         switch_args.append('--num-hosts %s' % manifest.target_config['num-hosts'])
 
