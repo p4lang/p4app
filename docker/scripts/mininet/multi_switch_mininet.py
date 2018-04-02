@@ -177,8 +177,6 @@ def main():
 
     net.stop()
 
-    if bmv2_log:
-        os.system('bash -c "cp /tmp/p4s.s*.log \'%s\'"' % args.log_dir)
     if pcap_dump:
         os.system('bash -c "cp *.pcap \'%s\'"' % args.log_dir)
 
