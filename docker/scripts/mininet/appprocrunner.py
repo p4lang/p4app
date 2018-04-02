@@ -20,7 +20,8 @@ class AppProcess:
 
     def formatCmd(self, cmd):
         for h in self.runner.net.hosts:
-            cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
+            cmd = re.sub('(%s)([^0-9]|$)' % h.name, h.defaultIntf().updateIP() + '\\2', cmd)
+            print cmd
         return cmd
 
 
