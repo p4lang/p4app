@@ -27,7 +27,7 @@ class AppController:
 
         self.mcast_groups_files = dict((sw, []) for sw in self.switches)
         self.mcast_groups = dict((sw, {}) for sw in self.switches)
-        self.last_mcnoderid = -1
+        self.last_mcnoderid = 0
 
         self.shortestpath = ShortestPath(self.conf['links'])
 
@@ -83,7 +83,7 @@ class AppController:
         handle = results[-1]['handle']
         commands = ['mc_mgrp_create %d' % mgid]
 
-        if 'model' in self.conf and self.conf['model'] != 'BMV2':
+        if 'model' in self.conf and self.conf['model'].lower() != 'bmv2':
             commands += ['mc_associate_node %d %d 0 0' % (mgid, results[-1]['handle'])]
         else:
             commands += ['mc_node_associate %d %d' % (mgid, results[-1]['handle'])]
