@@ -1,15 +1,8 @@
-#ifndef __HEADER_H__
-#define __HEADER_H__ 1
+#ifndef __HEADER_P4__
+#define __HEADER_P4__ 1
 
 struct ingress_metadata_t {
     bit<32> nhop_ipv4;
-}
-
-struct intrinsic_metadata_t {
-    bit<48> ingress_global_timestamp;
-    bit<32> lf_field_list;
-    bit<16> mcast_grp;
-    bit<16> egress_rid;
 }
 
 header ethernet_t {
@@ -37,8 +30,6 @@ header ipv4_t {
 struct metadata {
     @name("ingress_metadata")
     ingress_metadata_t   ingress_metadata;
-    @name("intrinsic_metadata")
-    intrinsic_metadata_t intrinsic_metadata;
 }
 
 struct headers {
@@ -48,4 +39,4 @@ struct headers {
     ipv4_t     ipv4;
 }
 
-#endif // __HEADER_H__
+#endif // __HEADER_P4__

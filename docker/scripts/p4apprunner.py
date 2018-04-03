@@ -178,6 +178,9 @@ def run_mininet(manifest):
 
     switch_args.append('--cli-message "%s"' % message_file)
 
+    if 'pcap_dump' in manifest.target_config and manifest.target_config['pcap_dump']:
+        switch_args.append('--pcap-dump')
+
     if 'num-hosts' in manifest.target_config:
         switch_args.append('--num-hosts %s' % manifest.target_config['num-hosts'])
 
@@ -212,7 +215,7 @@ def run_multiswitch(manifest):
 
     model = 'bmv2'
     if 'model' in manifest.target_config:
-        model = manifest.target_config['model']
+        model = manifest.target_config['model'].lower()
 
     if model == 'bmv2':
         if args.json: json_file = os.path.abspath(args.json)
@@ -283,6 +286,9 @@ def main():
     tar = tarfile.open(args.app)
     tar.extractall()
     tar.close()
+
+    run_command('touch /tmp/p4app_logs/p4s.s1.log')
+    run_command('ln -s /tmp/p4app_logs/p4s.s1.log /tmp/p4s.s1.log')
 
     log('Reading package manifest.')
     with open(args.manifest, 'r') as manifest_file:
