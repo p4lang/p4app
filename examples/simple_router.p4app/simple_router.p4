@@ -5,13 +5,13 @@
 #include "parser.p4"
 
 control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
-    @name("rewrite_mac") action rewrite_mac(bit<48> smac) {
+    action rewrite_mac(bit<48> smac) {
         hdr.ethernet.srcAddr = smac;
     }
-    @name("_drop") action _drop() {
+    action _drop() {
         mark_to_drop();
     }
-    @name("send_frame") table send_frame {
+    table send_frame {
         actions = {
             rewrite_mac;
             _drop;
@@ -31,18 +31,18 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 }
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
-    @name("_drop") action _drop() {
+    action _drop() {
         mark_to_drop();
     }
-    @name("set_nhop") action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
+    action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
         meta.ingress_metadata.nhop_ipv4 = nhop_ipv4;
         standard_metadata.egress_spec = port;
         hdr.ipv4.ttl = hdr.ipv4.ttl + 8w255;
     }
-    @name("set_dmac") action set_dmac(bit<48> dmac) {
+    action set_dmac(bit<48> dmac) {
         hdr.ethernet.dstAddr = dmac;
     }
-    @name("ipv4_lpm") table ipv4_lpm {
+    table ipv4_lpm {
         actions = {
             _drop;
             set_nhop;
@@ -54,7 +54,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
         size = 1024;
         default_action = NoAction();
     }
-    @name("forward") table forward {
+    table forward {
         actions = {
             set_dmac;
             _drop;
