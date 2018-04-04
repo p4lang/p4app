@@ -23,6 +23,7 @@ from mininet.cli import CLI
 from p4_mininet import P4Switch, P4Host
 
 import argparse
+import os
 from subprocess import PIPE, Popen
 from time import sleep
 
@@ -128,7 +129,7 @@ def main():
     CLI( net )
     net.stop()
 
-    if pcap_dump:
+    if args.pcap_dump:
         os.system('bash -c "cp *.pcap \'%s\'"' % '/tmp/p4app_logs')
 
 if __name__ == '__main__':
