@@ -14,6 +14,7 @@
 # limitations under the License.
 
 P4APP_IMAGE=${P4APP_IMAGE:-p4lang/p4app:latest}
+P4APP_CONTAINER_ARGS=${P4APP_CONTAINER_ARGS:-""}
 
 
 myrealpath() {
@@ -54,6 +55,7 @@ function run-p4app {
             --name "p4app_$RANDOM" \
             -v $1:$APP_TO_RUN \
             -v "$P4APP_LOGDIR":/tmp/p4app_logs \
+             $P4APP_CONTAINER_ARGS \
              $P4APP_IMAGE $APP_TO_RUN "${@:2}"
 }
 
