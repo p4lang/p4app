@@ -51,8 +51,9 @@ function build-command {
 
 function run-p4app {
   APP_TO_RUN=/tmp/app.tar.gz
+  P4APP_NAME=${P4APP_NAME:-"p4app_$RANDOM"}
   docker run --privileged --interactive --tty --rm \
-            --name "p4app_$RANDOM" \
+            --name "$P4APP_NAME" \
             -v $1:$APP_TO_RUN \
             -v "$P4APP_LOGDIR":/tmp/p4app_logs \
              $P4APP_CONTAINER_ARGS \
@@ -126,7 +127,7 @@ function update-command {
 }
 
 function exec-command {
-  container_id=$(docker ps | grep -m1 p4app_ | awk '{print $1}')
+  container_id=${P4APP_NAME:-$(docker ps | grep -m1 p4app_ | awk '{print $1}')}
 
   if [ -z "$container_id" ]; then
       (>&2 echo "Couldn't find any p4app currently running.")
