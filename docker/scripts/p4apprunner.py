@@ -27,6 +27,10 @@ parser.add_argument('--build-dir', help='Directory to build in.',
                     type=str, action='store', required=False, default='/tmp')
 parser.add_argument('--quiet', help='Suppress log messages.',
                     action='store_true', required=False, default=False)
+parser.add_argument('--build-only', help='Compile the program, but do not run it.',
+                    action='store_true', required=False, default=False)
+parser.add_argument('--json', help='Use this compiled JSON file instead of compiling.',
+                    type=str, action='store', required=False, default=None)
 parser.add_argument('--manifest', help='Path to manifest file.',
                     type=str, action='store', required=False, default='./p4app.json')
 parser.add_argument('app', help='.p4app package to run.', type=str)
@@ -84,6 +88,8 @@ def read_manifest(manifest_file):
 
     return Manifest(program_file, language, chosen_target, manifest['targets'][chosen_target])
 
+def get_program_name(program_file):
+    return os.path.basename(program_file).rstrip('.p4')
 
 def run_compile_bmv2(manifest):
     if 'run-before-compile' in manifest.target_config:
@@ -112,7 +118,7 @@ def run_compile_bmv2(manifest):
         compiler_args.extend(flags)
 
     # Compile the program.
-    output_file = manifest.program_file + '.json'
+    output_file = get_program_name(manifest.program_file) + '.json'
     compiler_args.append('"%s"' % manifest.program_file)
     compiler_args.append('-o "%s"' % output_file)
     rv = run_command('p4c-bm2-ss %s' % ' '.join(compiler_args))
@@ -172,6 +178,9 @@ def run_mininet(manifest):
 
     switch_args.append('--cli-message "%s"' % message_file)
 
+    if 'pcap_dump' in manifest.target_config and manifest.target_config['pcap_dump']:
+        switch_args.append('--pcap-dump')
+
     if 'num-hosts' in manifest.target_config:
         switch_args.append('--num-hosts %s' % manifest.target_config['num-hosts'])
 
@@ -184,8 +193,38 @@ def run_mininet(manifest):
     program = '"%s/mininet/single_switch_mininet.py"' % sys.path[0]
     return run_command('python2 %s %s' % (program, ' '.join(switch_args)))
 
+def build_only(manifest):
+
+    model = 'bmv2'
+    if 'model' in manifest.target_config:
+        model = manifest.target_config['model']
+
+    if model == 'bmv2':
+        output_file = run_compile_bmv2(manifest)
+    else:
+        log_error('Unrecognized model:', model)
+        sys.exit(1)
+
+    rc = run_command('cp %s /tmp/p4app_logs/program.json' % output_file)
+
+    if rc != 0:
+        log_error("Failed to copy compiled program to output location")
+        sys.exit(1)
+
 def run_multiswitch(manifest):
-    output_file = run_compile_bmv2(manifest)
+
+    model = 'bmv2'
+    if 'model' in manifest.target_config:
+        model = manifest.target_config['model'].lower()
+
+    if model == 'bmv2':
+        if args.json: json_file = os.path.abspath(args.json)
+        else:         json_file = run_compile_bmv2(manifest)
+        behavioral_exe = 'simple_switch'
+        switch_cli = 'simple_switch_CLI'
+    else:
+        log_error('Unrecognized model:', model)
+        sys.exit(1)
 
     script_args = []
     script_args.append('--log-dir "/tmp/p4app_logs"')
@@ -193,9 +232,9 @@ def run_multiswitch(manifest):
     script_args.append('--target "%s"' % manifest.target)
     if 'auto-control-plane' in manifest.target_config and manifest.target_config['auto-control-plane']:
         script_args.append('--auto-control-plane' )
-    script_args.append('--behavioral-exe "%s"' % 'simple_switch')
-    script_args.append('--json "%s"' % output_file)
-    #script_args.append('--cli')
+    script_args.append('--behavioral-exe "%s"' % behavioral_exe)
+    script_args.append('--cli-path "%s"' % switch_cli)
+    script_args.append('--json "%s"' % json_file)
 
     program = '"%s/mininet/multi_switch_mininet.py"' % sys.path[0]
     return run_command('python2 %s %s' % (program, ' '.join(script_args)))
@@ -222,7 +261,7 @@ def run_stf(manifest):
 
 def run_custom(manifest):
     output_file = run_compile_bmv2(manifest)
-    python_path = 'PYTHONPATH=$PYTHONPATH:/scripts/mininet/'    
+    python_path = 'PYTHONPATH=$PYTHONPATH:/scripts/mininet/'
     script_args = []
     script_args.append('--behavioral-exe "%s"' % 'simple_switch')
     script_args.append('--json "%s"' % output_file)
@@ -248,6 +287,9 @@ def main():
     tar.extractall()
     tar.close()
 
+    run_command('touch /tmp/p4app_logs/p4s.s1.log')
+    run_command('ln -s /tmp/p4app_logs/p4s.s1.log /tmp/p4s.s1.log')
+
     log('Reading package manifest.')
     with open(args.manifest, 'r') as manifest_file:
         manifest = read_manifest(manifest_file)
@@ -257,7 +299,10 @@ def main():
     if 'use' in manifest.target_config:
         backend = manifest.target_config['use']
 
-    if backend == 'mininet':
+    if args.build_only or backend == 'compile-bmv2':
+        build_only(manifest)
+        rc = 0
+    elif backend == 'mininet':
         rc = run_mininet(manifest)
     elif backend == 'multiswitch':
         rc = run_multiswitch(manifest)
@@ -265,9 +310,6 @@ def main():
         rc = run_stf(manifest)
     elif backend == 'custom':
         rc = run_custom(manifest)
-    elif backend == 'compile-bmv2':
-        run_compile_bmv2(manifest)
-        rc = 0
     else:
         log_error('Target specifies unknown backend:', backend)
         sys.exit(1)

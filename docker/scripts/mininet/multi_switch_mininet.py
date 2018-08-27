@@ -43,6 +43,7 @@ parser.add_argument('--thrift-port', help='Thrift server port for table updates'
                     type=int, action="store", default=9090)
 parser.add_argument('--bmv2-log', help='verbose messages in log file', action="store_true")
 parser.add_argument('--cli', help="start the mininet cli", action="store_true")
+parser.add_argument('--cli-path', help="path to control utility for switch", default="simple_switch_CLI")
 parser.add_argument('--auto-control-plane', help='enable automatic control plane population', action="store_true")
 parser.add_argument('--json', help='Path to JSON config file',
                     type=str, action="store", required=True)
@@ -152,7 +153,7 @@ def main():
     controller = None
     if args.auto_control_plane or 'controller_module' in conf:
         controller = AppController(manifest=manifest, target=args.target,
-                                     topo=topo, net=net)
+                                     topo=topo, net=net, cli_path=args.cli_path)
 
     net.start()
 
@@ -176,8 +177,6 @@ def main():
 
     net.stop()
 
-    if bmv2_log:
-        os.system('bash -c "cp /tmp/p4s.s*.log \'%s\'"' % args.log_dir)
     if pcap_dump:
         os.system('bash -c "cp *.pcap \'%s\'"' % args.log_dir)
 

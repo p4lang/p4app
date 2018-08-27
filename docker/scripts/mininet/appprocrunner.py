@@ -20,7 +20,8 @@ class AppProcess:
 
     def formatCmd(self, cmd):
         for h in self.runner.net.hosts:
-            cmd = cmd.replace(h.name, h.defaultIntf().updateIP())
+            cmd = re.sub('(%s)([^0-9]|$)' % h.name, h.defaultIntf().updateIP() + '\\2', cmd)
+            print cmd
         return cmd
 
 
@@ -40,10 +41,10 @@ class AppProcess:
             self.stdout_file.close()
 
     def waitForExit(self):
-        print self.proc.communicate()
+        print self.host.name, self.proc.communicate()
         if self.proc.returncode is None:
             self.proc.wait()
-            print self.proc.communicate()
+            print self.host.name, self.proc.communicate()
 
         self.cleanup()
 
