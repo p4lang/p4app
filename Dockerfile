@@ -1,5 +1,6 @@
 FROM p4lang/p4c:latest
 MAINTAINER Seth Fowler <seth@barefootnetworks.com>
+MAINTAINER Theo Jepsen <jepset@usi.ch>
 MAINTAINER Robert Soule <robert.soule@barefootnetworks.com>
 
 # Install dependencies and some useful tools.
@@ -10,6 +11,8 @@ ENV NET_TOOLS iputils-arping \
               nmap \
               python-ipaddr \
               python-scapy \
+              python-psutil \
+              python-pip \
               tcpdump \
               traceroute \
               tshark
@@ -44,6 +47,9 @@ RUN apt-get update && \
 # Fix to get tcpdump working
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
+# Upgrade gRPC python bindings
+RUN pip install --upgrade grpcio
+
 # Install mininet.
 COPY docker/third-party/mininet /third-party/mininet
 WORKDIR /third-party/mininet
@@ -54,5 +60,8 @@ RUN make install && \
 # Install the scripts we use to run and test P4 apps.
 COPY docker/scripts /scripts
 WORKDIR /scripts
+
+ENV PYTHONPATH "/scripts:${PYTHONPATH}"
+ENV DISPLAY ":0"
 
 ENTRYPOINT ["./p4apprunner.py"]

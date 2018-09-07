@@ -21,13 +21,20 @@ from sys import exit
 import os
 import tempfile
 import socket
+from time import sleep
+
+from netstat import check_listening_on_port
+
+SWITCH_START_TIMEOUT = 10 # seconds
 
 class P4Host(Host):
     def config(self, **params):
-        r = super(P4Host, self).config(**params)
+        r = super(Host, self).config(**params)
+
+        self.defaultIntf().rename("eth0")
 
         for off in ["rx", "tx", "sg"]:
-            cmd = "/sbin/ethtool --offload %s %s off" % (self.defaultIntf().name, off)
+            cmd = "/sbin/ethtool --offload eth0 %s off" % off
             self.cmd(cmd)
 
         # disable IPv6
@@ -37,16 +44,14 @@ class P4Host(Host):
 
         return r
 
-    def describe(self, sw_addr=None, sw_mac=None):
+    def describe(self):
         print "**********"
-        print "Network configuration for: %s" % self.name
-        print "Default interface: %s\t%s\t%s" %(
+        print self.name
+        print "default interface: %s\t%s\t%s" %(
             self.defaultIntf().name,
             self.defaultIntf().IP(),
             self.defaultIntf().MAC()
         )
-        if sw_addr is not None or sw_mac is not None:
-            print "Default route to switch: %s (%s)" % (sw_addr, sw_mac)
         print "**********"
 
 class P4Switch(Switch):
@@ -54,10 +59,10 @@ class P4Switch(Switch):
     device_id = 0
 
     def __init__(self, name, sw_path = None, json_path = None,
-                 log_file = None,
                  thrift_port = None,
                  pcap_dump = False,
                  log_console = False,
+                 log_file = None,
                  verbose = False,
                  device_id = None,
                  enable_debugger = False,
@@ -74,14 +79,19 @@ class P4Switch(Switch):
         self.sw_path = sw_path
         self.json_path = json_path
         self.verbose = verbose
-        self.log_file = log_file
-        if self.log_file is None:
-            self.log_file = "/tmp/p4s.{}.log".format(self.name)
-        self.output = open(self.log_file, 'w')
+        logfile = "/tmp/p4s.{}.log".format(self.name)
+        self.output = open(logfile, 'w')
         self.thrift_port = thrift_port
+        if check_listening_on_port(self.thrift_port):
+            error('%s cannot bind port %d because it is bound by another process\n' % (self.name, self.grpc_port))
+            exit(1)
         self.pcap_dump = pcap_dump
         self.enable_debugger = enable_debugger
         self.log_console = log_console
+        if log_file is not None:
+            self.log_file = log_file
+        else:
+            self.log_file = "/tmp/p4s.{}.log".format(self.name)
         if device_id is not None:
             self.device_id = device_id
             P4Switch.device_id = max(P4Switch.device_id, device_id)
@@ -102,11 +112,9 @@ class P4Switch(Switch):
         while True:
             if not os.path.exists(os.path.join("/proc", str(pid))):
                 return False
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.5)
-            result = sock.connect_ex(("localhost", self.thrift_port))
-            if result == 0:
-                return  True
+            if check_listening_on_port(self.thrift_port):
+                return True
+            sleep(0.5)
 
     def start(self, controllers):
         "Start up a new P4 switch"
@@ -116,8 +124,7 @@ class P4Switch(Switch):
             if not intf.IP():
                 args.extend(['-i', str(port) + "@" + intf.name])
         if self.pcap_dump:
-            args.append("--pcap")
-            # args.append("--useFiles")
+            args.append("--pcap %s" % self.pcap_dump)
         if self.thrift_port:
             args.extend(['--thrift-port', str(self.thrift_port)])
         if self.nanomsg:
