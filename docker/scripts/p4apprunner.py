@@ -37,9 +37,9 @@ def run_command(command):
     return os.WEXITSTATUS(os.system(command))
 
 def main():
-    os.chdir('/tmp/p4app-logs')
-    main_script = os.path.join(args.app, 'main.py')
-    rc = run_command("python %s" % main_script)
+    os.chdir('/tmp/p4app-pkg')
+    #main_script = os.path.join(args.app, 'main.py')
+    rc = run_command("python main.py")
 
     sys.exit(rc)
 

@@ -96,19 +96,25 @@ class SwitchConnection(object):
         else:
             self.client_stub.Write(request)
 
-    def WriteMulticastGroupEntry(self, mcast_group_entry, dry_run=False):
+    def write_group(self, group, update_type, dry_run=False):
         request = p4runtime_pb2.WriteRequest()
         request.device_id = self.device_id
         request.election_id.low = 1
-        # TODO
-        print dir(request)
         update = request.updates.add()
-        update.type = p4runtime_pb2.Update.INSERT
-        update.packet_replication_engine_entry.multicast_group_entry.CopyFrom(mcast_group_entry)
+        update.type = update_type
+        pre_entry = update.entity.packet_replication_engine_entry
+        pre_entry.multicast_group_entry.CopyFrom(group)
         if dry_run:
             print "P4Runtime Write:", request
         else:
             self.client_stub.Write(request)
+
+    def CreateMulticastGroup(self, group):
+        return self.write_group(group, p4runtime_pb2.Update.INSERT)
+    def modify_group(self, group):
+        return self.write_group(group, p4runtime_pb2.Update.MODIFY)
+    def delete_group(self, group):
+        return self.write_group(group, p4runtime_pb2.Update.DELETE)
 
     def ReadTableEntries(self, table_id=None, dry_run=False):
         request = p4runtime_pb2.ReadRequest()

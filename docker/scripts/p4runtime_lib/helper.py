@@ -20,6 +20,22 @@ from p4.config.v1 import p4info_pb2
 
 from convert import encode
 
+class ReplicaMgr(object):
+    def __init__(self, group):
+        self.group = group
+    def append(self, port, rid):
+        r = self.group.replicas.add()
+        r.egress_port = port
+        r.instance = rid
+        return self
+    def pop_back(self):
+        del self.group.replicas[-1]
+        return self
+    # generator function to make ReplicaMgr iterable
+    def __iter__(self):
+        for r in self.group.replicas:
+            yield (r.egress_port, r.instance)
+
 class P4InfoHelper(object):
     def __init__(self, p4_info_filepath):
         p4info = p4info_pb2.P4Info()
@@ -194,12 +210,13 @@ class P4InfoHelper(object):
                 ])
         return table_entry
 
-    def buildMulticastGroupEntry(self,
+    def buildMulticastGroup(self,
                         mgid=None,
                         ports=None):
-        mcast_group_entry = p4runtime_pb2.MulticastGroupEntry()
-        mcast_group_entry.multicast_group_id = mgid
-        for p in ports or []:
-            # TODO
-            mcast_group_entry.replicas.extend([])
-        return mcast_group_entry
+        group = p4runtime_pb2.MulticastGroupEntry()
+        group.multicast_group_id = mgid
+        replicas = ReplicaMgr(group)
+        for i,port in enumerate(ports):
+            replicas.append(port, i)
+        return group
+

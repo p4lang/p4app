@@ -250,10 +250,9 @@ class P4RuntimeSwitch(P4Switch):
             priority=priority)
         self.sw_conn.WriteTableEntry(table_entry)
 
-    def addMcastGroup(self, mgid=None, ports=None):
-        # TODO
-        mcast_group_entry = self.p4info_helper.buildMulticastGroupEntry(mgid=mgid, ports=ports)
-        self.sw_conn.WriteMulticastGroupEntry(mcast_group_entry)
+    def addMulticastGroup(self, mgid=None, ports=None):
+        group = self.p4info_helper.buildMulticastGroup(mgid=mgid, ports=ports)
+        self.sw_conn.CreateMulticastGroup(group)
 
     def printTableEntries(self):
         """
