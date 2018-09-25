@@ -208,7 +208,7 @@ class P4RuntimeSwitch(P4Switch):
         if isinstance(sw_conf_or_filename, dict):
             sw_conf = sw_conf_or_filename
         else:
-            conf_path = os.path.join('/tmp/p4app-pkg', sw_conf_or_filename)
+            conf_path = os.path.join('/p4app', sw_conf_or_filename)
             with open(conf_path, 'r') as f:
                 sw_conf = json_load_byteified(f)
 

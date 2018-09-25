@@ -4,7 +4,7 @@ from p4app_util import run_command
 class P4Program:
 
     def __init__(self, prog_filename, version=16, compile_flags=[]):
-        self.prog_filename = os.path.join('/tmp/p4app-pkg', prog_filename)
+        self.prog_filename = os.path.join('/p4app', prog_filename)
         self.version = 16
         assert isinstance(self.version, str) or isinstance(self.version, int)
         self.compile_flags = compile_flags

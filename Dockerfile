@@ -59,9 +59,10 @@ RUN make install && \
 
 # Install the scripts we use to run and test P4 apps.
 COPY docker/scripts /scripts
-WORKDIR /scripts
+RUN mkdir /p4app
+WORKDIR /p4app
 
 ENV PYTHONPATH "/scripts:${PYTHONPATH}"
 ENV DISPLAY ":0"
 
-ENTRYPOINT ["./p4apprunner.py"]
+ENTRYPOINT ["/scripts/p4apprunner.py"]

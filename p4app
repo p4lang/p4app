@@ -36,7 +36,7 @@ function normalize_path() {
 }
 
 function run-p4app {
-  APP_TO_RUN=/tmp/p4app-pkg
+  APP_TO_RUN=/p4app
   P4APP_NAME=${P4APP_NAME:-"p4app_$RANDOM"}
   # XXX this is for X support (e.g. opening xterm)
   #XSOCK=/tmp/.X11-unix
