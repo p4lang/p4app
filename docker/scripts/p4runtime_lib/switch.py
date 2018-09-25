@@ -89,7 +89,10 @@ class SwitchConnection(object):
         request.device_id = self.device_id
         request.election_id.low = 1
         update = request.updates.add()
-        update.type = p4runtime_pb2.Update.INSERT
+        if table_entry.is_default_action:
+            update.type = p4runtime_pb2.Update.MODIFY
+        else:
+            update.type = p4runtime_pb2.Update.INSERT
         update.entity.table_entry.CopyFrom(table_entry)
         if dry_run:
             print "P4Runtime Write:", request
