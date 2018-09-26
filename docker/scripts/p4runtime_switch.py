@@ -24,10 +24,12 @@ from mininet.log import info, error, debug, setLogLevel
 
 #setLogLevel('debug')
 
+import grpc
 from p4_mininet import P4Switch, SWITCH_START_TIMEOUT
 from netstat import check_listening_on_port
 import p4runtime_lib.bmv2
 import p4runtime_lib.helper
+from p4runtime_lib.error_utils import printGrpcError
 
 def tableEntryToString(flow):
     if 'match' in flow:
@@ -191,7 +193,10 @@ class P4RuntimeSwitch(P4Switch):
                 device_id=self.device_id,
                 proto_dump_file='/tmp/p4app-logs/' + self.name + '-p4runtime-requests.txt')
 
-        self.sw_conn.MasterArbitrationUpdate()
+        try:
+            self.sw_conn.MasterArbitrationUpdate()
+        except grpc.RpcError as e:
+            printGrpcError(e)
 
         if self.p4info_path:
             self.loadP4Info()
@@ -201,8 +206,11 @@ class P4RuntimeSwitch(P4Switch):
         self.p4info_helper = p4runtime_lib.helper.P4InfoHelper(self.p4info_path)
 
     def loadJSON(self):
-        self.sw_conn.SetForwardingPipelineConfig(p4info=self.p4info_helper.p4info,
-                bmv2_json_file_path=self.json_path)
+        try:
+            self.sw_conn.SetForwardingPipelineConfig(p4info=self.p4info_helper.p4info,
+                    bmv2_json_file_path=self.json_path)
+        except grpc.RpcError as e:
+            printGrpcError(e)
 
     def loadConf(self, sw_conf_or_filename):
         if isinstance(sw_conf_or_filename, dict):
@@ -248,11 +256,18 @@ class P4RuntimeSwitch(P4Switch):
             action_name=action_name,
             action_params=action_params,
             priority=priority)
-        self.sw_conn.WriteTableEntry(table_entry)
+        try:
+            self.sw_conn.WriteTableEntry(table_entry)
+        except grpc.RpcError as e:
+            printGrpcError(e)
+
 
     def addMulticastGroup(self, mgid=None, ports=None):
         group = self.p4info_helper.buildMulticastGroup(mgid=mgid, ports=ports)
-        self.sw_conn.CreateMulticastGroup(group)
+        try:
+            self.sw_conn.CreateMulticastGroup(group)
+        except grpc.RpcError as e:
+            printGrpcError(e)
 
     def printTableEntries(self):
         """
