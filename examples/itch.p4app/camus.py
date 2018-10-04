@@ -59,10 +59,12 @@ def parseCliCommands(cli_commands):
     for l in cli_commands.split('\n'):
         p = l.split()
         if p[0] == 'table_add':
+            is_ternary = '->' in l or '&&' in l
             table_name, action_name = p[1:3]
             matches = p[3:p.index('=>')]
-            args = p[p.index('=>')+1:]
-            print table_name, matches, args
+            args = p[p.index('=>')+1 : (-1 if is_ternary else None)]
+            priority = p[-1] if is_ternary else None
+            print table_name, matches, args, priority
         else:
             raise Exception("Unsupported simple_cli command: " + p[0])
 

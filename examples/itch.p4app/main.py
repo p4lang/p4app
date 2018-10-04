@@ -23,7 +23,7 @@ class RingTopo(Topo):
             self.addLink(switches[i], switches[(i+1)%n], port1=2, port2=3)
 
 topo = RingTopo(n)
-net = P4Mininet(program='basic.p4', topo=topo)
+net = P4Mininet(program='itch.p4', topo=topo)
 net.start()
 
 for i in range(1, n+1):
