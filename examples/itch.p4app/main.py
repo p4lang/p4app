@@ -4,6 +4,19 @@ from camus import CamusApp
 
 n = 3
 
+itch_app = CamusApp('spec.p4')
+itch_app.generateQueryPipeline('itch_camus.p4')
+
+rules = ['add_order.shares = 1: fwd(1);',
+         'add_order.price = 2: fwd(2);',
+         'add_order.shares = 3 and add_order.price = 4: fwd(3);',
+         'add_order.shares > 100 and add_order.stock = "BFN": fwd(2);']
+
+runtime_config = itch_app.compileRules(rules=rules)
+
+print runtime_config.mcastGroups()
+print runtime_config.p4runtime()
+
 class RingTopo(Topo):
     def __init__(self, n, **opts):
         Topo.__init__(self, **opts)
@@ -45,16 +58,3 @@ for i in range(1, n+1):
 
 
 net.pingAll()
-
-itch_app = CamusApp('spec.p4')
-itch_app.generateQueryPipeline('itch_camus.p4')
-
-rules = ['add_order.shares = 1: fwd(1);',
-         'add_order.price = 2: fwd(2);',
-         'add_order.shares = 3 and add_order.price = 4: fwd(3);',
-         'add_order.shares > 100 and add_order.stock = "BFN": fwd(2);']
-
-runtime_config = itch_app.compileRules(rules=rules)
-
-print runtime_config.mcastGroups()
-print runtime_config.p4runtime()
