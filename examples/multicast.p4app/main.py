@@ -43,7 +43,13 @@ sw.insertTableEntry(table_name='MyIngress.ipv4_lpm',
 
 sw.addMulticastGroup(mgid=mgid, ports=range(1, n+1))
 
-net.pingAll()
+loss = net.pingAll()
+assert loss == 0
 
 # Should receive a pong from h2 and h3 (i.e. a duplicate pong)
-print net.get('h1').cmd('ping -c2 10.0.0.255')
+out = net.get('h1').cmd('ping -c2 10.0.0.255')
+print out
+assert 'from 10.0.0.3' in out
+assert 'from 10.0.0.2' in out
+
+print "OK"
