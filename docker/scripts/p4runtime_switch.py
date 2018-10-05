@@ -300,3 +300,15 @@ class P4RuntimeSwitch(P4Switch):
                     print self.p4info_helper.get_action_param_name(action_name, p.param_id),
                     print '%r' % p.value,
                 print
+
+    def readCounter(self, counter_name, index):
+        """
+        Reads the specified counter at the specified index from the switch.
+
+        :param counter_name: the name of the counter from the P4 program
+        :param index: the counter index
+        """
+        for response in self.sw_conn.ReadCounters(self.p4info_helper.get_counters_id(counter_name), index):
+            for entity in response.entities:
+                counter = entity.counter_entry
+                return counter.data.packet_count, counter.data.byte_count
