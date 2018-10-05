@@ -23,6 +23,7 @@ from mininet.moduledeps import pathCheck
 from mininet.log import info, error, debug, setLogLevel
 
 #setLogLevel('debug')
+setLogLevel('info')
 
 import grpc
 from p4_mininet import P4Switch, SWITCH_START_TIMEOUT
@@ -78,6 +79,8 @@ class P4RuntimeSwitch(P4Switch):
                  thrift_port = None,
                  pcap_dump = False,
                  log_console = False,
+                 start_controller = True,
+                 program = None,
                  verbose = False,
                  device_id = None,
                  enable_debugger = False,
@@ -122,12 +125,17 @@ class P4RuntimeSwitch(P4Switch):
             error('%s cannot bind port %d because it is bound by another process\n' % (self.name, self.grpc_port))
             exit(1)
 
+        self.program = program
         self.verbose = verbose
         logfile = "/tmp/p4app-logs/p4s.{}.log".format(self.name)
         self.output = open(logfile, 'w')
         self.pcap_dump = pcap_dump
         self.enable_debugger = enable_debugger
         self.log_console = log_console
+        self.start_controller = start_controller
+        if not self.program.supportsP4Runtime():
+            self.start_controller = False
+        self.sw_conn = None
         if log_file is not None:
             self.log_file = log_file
         else:
@@ -187,20 +195,21 @@ class P4RuntimeSwitch(P4Switch):
             exit(1)
         info("P4 switch {} has been started.\n".format(self.name))
 
-        self.sw_conn = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-                name=self.name,
-                address='127.0.0.1:' + str(self.grpc_port),
-                device_id=self.device_id,
-                proto_dump_file='/tmp/p4app-logs/' + self.name + '-p4runtime-requests.txt')
+        if self.start_controller:
+            self.sw_conn = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+                    name=self.name,
+                    address='127.0.0.1:' + str(self.grpc_port),
+                    device_id=self.device_id,
+                    proto_dump_file='/tmp/p4app-logs/' + self.name + '-p4runtime-requests.txt')
 
-        try:
-            self.sw_conn.MasterArbitrationUpdate()
-        except grpc.RpcError as e:
-            printGrpcError(e)
+            try:
+                self.sw_conn.MasterArbitrationUpdate()
+            except grpc.RpcError as e:
+                printGrpcError(e)
 
-        if self.p4info_path:
-            self.loadP4Info()
-        self.loadJSON()
+            if self.p4info_path:
+                self.loadP4Info()
+            self.loadJSON()
 
     def loadP4Info(self):
         self.p4info_helper = p4runtime_lib.helper.P4InfoHelper(self.p4info_path)

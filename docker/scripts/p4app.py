@@ -42,7 +42,7 @@ def mkSimpleSwitch(prog_or_filename, switch_args={}):
 
     return SimpleSwitch
 
-def configureP4RuntimeSimpleSwitch(prog_or_filename, **switch_args):
+def configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller, **switch_args):
     if isinstance(prog_or_filename, P4Program):
         prog = prog_or_filename
     else:
@@ -55,6 +55,8 @@ def configureP4RuntimeSimpleSwitch(prog_or_filename, **switch_args):
                 json_path=prog.json(),
                 p4info_path=prog.p4info(),
                 log_console=config.bmv2_log,
+                start_controller=start_controller,
+                program=prog,
                 pcap_dump=config.pcap_dump,
                 ))
             kwargs.update(switch_args)
@@ -75,10 +77,15 @@ class P4Mininet(Mininet):
         if 'program' not in kwargs:
             raise Exception("Must specify p4 program")
 
+        start_controller = True
+        if 'start_controller' in kwargs:
+            start_controller = kwargs['start_controller']
+            del kwargs['start_controller']
+
         if 'switch' not in kwargs:
             assert 'program' in kwargs
             prog_or_filename = kwargs['program']
-            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename)
+            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller)
 
         if 'program' in kwargs: del kwargs['program']
 
