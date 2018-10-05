@@ -17,32 +17,9 @@ class P4AppConfig:
 
 config = P4AppConfig()
 
-last_thrift_port = 9089
 
 
-def mkSimpleSwitch(prog_or_filename, switch_args={}):
-    if isinstance(prog_or_filename, P4Program):
-        prog = prog_or_filename
-    else:
-        prog = P4Program(prog_or_filename)
-
-    class SimpleSwitch(P4Switch):
-        def __init__(self, *opts, **kwargs):
-            global last_thrift_port
-            last_thrift_port += 1
-            kwargs.update(dict(
-                sw_path=config.simple_switch_path,
-                json_path=prog.json(),
-                log_console=config.bmv2_log,
-                pcap_dump=config.pcap_dump,
-                thrift_port=last_thrift_port
-                ))
-            kwargs.update(switch_args)
-            P4Switch.__init__(self, *opts, **kwargs)
-
-    return SimpleSwitch
-
-def configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller, **switch_args):
+def configureP4RuntimeSimpleSwitch(prog_or_filename, **switch_args):
     if isinstance(prog_or_filename, P4Program):
         prog = prog_or_filename
     else:
@@ -50,17 +27,16 @@ def configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller, **switch_
 
     class ConfiguredP4RuntimeSwitch(P4RuntimeSwitch):
         def __init__(self, *opts, **kwargs):
-            kwargs.update(dict(
+
+            kwargs2 = dict(
                 sw_path=config.simple_switch_grpc_path,
-                json_path=prog.json(),
-                p4info_path=prog.p4info(),
                 log_console=config.bmv2_log,
-                start_controller=start_controller,
                 program=prog,
                 pcap_dump=config.pcap_dump,
-                ))
-            kwargs.update(switch_args)
-            P4RuntimeSwitch.__init__(self, *opts, **kwargs)
+                )
+            kwargs2.update(switch_args)
+            kwargs2.update(kwargs)
+            P4RuntimeSwitch.__init__(self, *opts, **kwargs2)
 
         def describe(self):
             print "%s -> gRPC port: %d" % (self.name, self.grpc_port)
@@ -85,7 +61,7 @@ class P4Mininet(Mininet):
         if 'switch' not in kwargs:
             assert 'program' in kwargs
             prog_or_filename = kwargs['program']
-            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller)
+            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller=start_controller)
 
         if 'program' in kwargs: del kwargs['program']
 

@@ -1,7 +1,10 @@
-from p4app import P4Mininet
+from p4app import P4Mininet, P4Program
 from mininet.topo import Topo
 
 n = 3
+
+basic_prog = P4Program('basic.p4')
+wire_prog = P4Program('wire.p4')
 
 class RingTopo(Topo):
     def __init__(self, n, **opts):
@@ -13,7 +16,12 @@ class RingTopo(Topo):
             host = self.addHost('h%d' % i,
                                 ip = "10.0.0.%d" % i,
                                 mac = '00:00:00:00:00:%02x' % i)
-            switch = self.addSwitch('s%d' % i)
+            if i == 3:
+                program = wire_prog  # switch s3 uses 'wire.p4'
+            else:
+                program = basic_prog # all other switches use 'basic.p4'
+
+            switch = self.addSwitch('s%d' % i, program=program)
             self.addLink(host, switch, port2=1)
             switches.append(switch)
 
@@ -22,10 +30,12 @@ class RingTopo(Topo):
             self.addLink(switches[i], switches[(i+1)%n], port1=2, port2=3)
 
 topo = RingTopo(n)
-net = P4Mininet(program='basic.p4', topo=topo)
+net = P4Mininet(program=basic_prog, topo=topo)
 net.start()
 
 for i in range(1, n+1):
+    if i == 3: continue # skip s3, which uses 'wire.p4'
+
     sw = net.get('s%d'% i)
 
     # Forward to the host connected to this switch
@@ -43,6 +53,8 @@ for i in range(1, n+1):
                                           'port': 2})
 
 
-net.pingAll()
+# h3 is unreachable because wire.p4 only forwards in the ring, so only test
+# connectivity between h1 and h2:
+net.pingPair()
 
 print "OK"

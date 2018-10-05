@@ -74,7 +74,7 @@ class P4RuntimeSwitch(P4Switch):
     next_grpc_port = 50051
     next_thrift_port = 9090
 
-    def __init__(self, name, sw_path = None, json_path = None, p4info_path = None,
+    def __init__(self, name, sw_path = None,
                  grpc_port = None,
                  thrift_port = None,
                  pcap_dump = False,
@@ -91,6 +91,14 @@ class P4RuntimeSwitch(P4Switch):
         self.sw_path = sw_path
         # make sure that the provided sw_path is valid
         pathCheck(sw_path)
+
+        self.program = program
+        json_path = None
+        p4info_path = None
+        if self.program:
+            json_path = self.program.json()
+            if self.program.p4info():
+                p4info_path = self.program.p4info()
 
         if json_path is not None:
             # make sure that the provided JSON file exists
@@ -125,7 +133,6 @@ class P4RuntimeSwitch(P4Switch):
             error('%s cannot bind port %d because it is bound by another process\n' % (self.name, self.grpc_port))
             exit(1)
 
-        self.program = program
         self.verbose = verbose
         logfile = "/tmp/p4app-logs/p4s.{}.log".format(self.name)
         self.output = open(logfile, 'w')
