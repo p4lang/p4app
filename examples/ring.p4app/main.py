@@ -46,3 +46,7 @@ for i in range(1, n+1):
 net.pingAll()
 
 print "OK"
+
+# Start the mininet CLI to interactively run commands in the network:
+#from mininet.cli import CLI
+#CLI(net)
