@@ -1,5 +1,4 @@
 FROM p4lang/p4c:latest
-MAINTAINER Seth Fowler <seth@barefootnetworks.com>
 MAINTAINER Theo Jepsen <jepset@usi.ch>
 MAINTAINER Robert Soule <robert.soule@barefootnetworks.com>
 
