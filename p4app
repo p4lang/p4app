@@ -14,7 +14,6 @@
 # limitations under the License.
 
 P4APP_IMAGE=${P4APP_IMAGE:-p4lang/p4app:rc-2.0.0}
-P4APP_IMAGE=p4lang/p4appv2
 P4APP_CONTAINER_ARGS=${P4APP_CONTAINER_ARGS:-""}
 
 
