@@ -27,7 +27,7 @@ extension - for example, if you wrote a router in P4, you might place it in
 `router.p4app`. Inside the directory, you'd place your P4 program, any
 supporting files, and a `main.py` file that tells p4app how to run it.
 
-This repository comes with an example p4app called `wire.p4app`. Here's
+This repository comes with an example p4app called [wire.p4app](examples/wire.p4app). Here's
 how you can run it:
 
 ```
@@ -36,7 +36,7 @@ p4app run examples/wire.p4app
 
 If you run this command, you'll find yourself at a Mininet command prompt. p4app
 will automatically download a Docker image containing the P4 compiler and tools,
-compile `wire.p4`, and set up a container with a simulated network you
+compile [wire.p4](examples/wire.p4app/wire.p4), and set up a container with a simulated network you
 can use to experiment. In addition to Mininet itself, you can use `tshark`,
 `scapy`, and the net-tools and nmap suites right out of the box.
 
@@ -65,7 +65,7 @@ A p4app package has a directory structure that looks like this:
 ```
 
 The `main.py` file is a Python script that tells p4app how to build and run a
-P4 program; it's comparable to a Makefile. Here's how `examples/wire.p4app/main.py` looks:
+P4 program; it's comparable to a Makefile. Here's how [examples/wire.p4app/main.py](examples/wire.p4app/main.py) looks:
 
 ```
 from p4app import P4Mininet
@@ -101,7 +101,7 @@ Configuring Tables with P4Runtime
 Configuring tables in your P4 program is easy with p4app. P4app provides a
 wrapper around P4Runtime to configure tables in your P4-16 program. You can
 call `insertTableEntry()` on a switch object to add a table entry to that
-switch. From (examples/ring.p4app)[examples/ring.p4app/main.py]:
+switch. From [examples/ring.p4app](examples/ring.p4app/main.py):
 
 ```
 sw.insertTableEntry(table_name='MyIngress.ipv4_lpm',
@@ -125,7 +125,7 @@ Multicast Groups
 ----------------
 
 You can add multicast groups using `addMulticastGroup()`. From
-(examples/multicast.p4app)[examples/multicast.p4app/main.py]:
+[examples/multicast.p4app](examples/multicast.p4app/main.py):
 
 ```
 sw.addMulticastGroup(mgid=mgid, ports=range(1, n+1))
@@ -136,7 +136,7 @@ Reading Counters
 
 If your P4 program defines a counter, you can read it from the `main.py` script
 while the switch is running using `readCounter()`. From
-(examples/counter.p4app)[examples/counter.p4app/main.py]:
+[examples/counter.p4app](examples/counter.p4app/main.py):
 
 ```
 packet_count, byte_count = s1.readCounter('ingressPortCounter', port)
