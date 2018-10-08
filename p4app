@@ -48,7 +48,7 @@ function run-p4app {
             -v $1:$APP_TO_RUN \
             -v "$P4APP_LOGDIR":/tmp/p4app-logs \
              $P4APP_CONTAINER_ARGS \
-             $P4APP_IMAGE $APP_TO_RUN "${@:2}"
+             $P4APP_IMAGE "${@:2}"
 }
 
 function run-command {

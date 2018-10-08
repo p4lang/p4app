@@ -1,7 +1,13 @@
 from p4app import P4Mininet
 from mininet.topo import Topo
+import sys
 
-n = 3
+if len(sys.argv) > 1:
+    N = int(sys.argv[1])
+else:
+    N = 3
+
+print "Setting-up a %d-switch ring topology" % N
 
 class RingTopo(Topo):
     def __init__(self, n, **opts):
@@ -21,11 +27,11 @@ class RingTopo(Topo):
         for i in xrange(n):
             self.addLink(switches[i], switches[(i+1)%n], port1=2, port2=3)
 
-topo = RingTopo(n)
+topo = RingTopo(N)
 net = P4Mininet(program='basic.p4', topo=topo)
 net.start()
 
-for i in range(1, n+1):
+for i in range(1, N+1):
     sw = net.get('s%d'% i)
 
     # Forward to the host connected to this switch
@@ -46,7 +52,3 @@ for i in range(1, n+1):
 net.pingAll()
 
 print "OK"
-
-# Start the mininet CLI to interactively run commands in the network:
-#from mininet.cli import CLI
-#CLI(net)

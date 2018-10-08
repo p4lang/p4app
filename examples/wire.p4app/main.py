@@ -8,4 +8,8 @@ net.start()
 loss = net.pingAll()
 assert loss == 0
 
+# Start the mininet CLI to interactively run commands in the network:
+from mininet.cli import CLI
+CLI(net)
+
 print "OK"

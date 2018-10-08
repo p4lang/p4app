@@ -15,29 +15,22 @@
 
 from __future__ import print_function
 
-import argparse
 import os
 import sys
 
-parser = argparse.ArgumentParser(description='p4apprunner')
-parser.add_argument('app', help='.p4app package to run.', type=str)
-parser.add_argument('--quiet', help='Suppress log messages.',
-                    action='store_true', required=False, default=False)
-args = parser.parse_args()
+quiet = False
 
 def log(*items):
-    if args.quiet != True:
+    if quiet != True:
         print(*items)
-
-def log_error(*items):
-    print(*items, file=sys.stderr)
 
 def run_command(command):
     log('>', command)
     return os.WEXITSTATUS(os.system(command))
 
 def main():
-    rc = run_command("python main.py")
+    args = sys.argv[1:]
+    rc = run_command("python /p4app/main.py " + ' '.join(args))
 
     sys.exit(rc)
 
