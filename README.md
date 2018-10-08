@@ -89,7 +89,7 @@ single switch. The Mininet network is instantiated by calling `P4Mininet`,
 providing it with the program (`wire.p4`), as well as the topology it created
 (`topo`). Once the network `net` is started, it can be used like a standard
 Mininet network. Here the script tests connectivity by running Mininet's
-`pingAll()`. Finally, the script luanches the mininet CLI by calling `CLI(net)`.
+`pingAll()`. Finally, the script launches the mininet CLI by calling `CLI(net)`.
 This brings up a CLI that you can use to debug your network.
 
 p4app and the Control Plane
