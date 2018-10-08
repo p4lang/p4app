@@ -58,10 +58,17 @@ class P4Mininet(Mininet):
             start_controller = kwargs['start_controller']
             del kwargs['start_controller']
 
+        enable_debugger = False
+        if 'enable_debugger' in kwargs:
+            enable_debugger = kwargs['enable_debugger']
+            del kwargs['enable_debugger']
+
         if 'switch' not in kwargs:
             assert 'program' in kwargs
             prog_or_filename = kwargs['program']
-            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename, start_controller=start_controller)
+            kwargs['switch'] = configureP4RuntimeSimpleSwitch(prog_or_filename,
+                                                start_controller=start_controller,
+                                                enable_debugger=enable_debugger)
 
         if 'program' in kwargs: del kwargs['program']
 
