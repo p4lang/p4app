@@ -5,7 +5,6 @@ from p4_mininet import P4Host, P4Switch
 from p4_program import P4Program
 
 from p4runtime_switch import P4RuntimeSwitch
-import p4runtime_lib.simple_controller
 
 class P4AppConfig:
     def __init__(self):
