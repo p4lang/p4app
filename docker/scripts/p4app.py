@@ -1,10 +1,8 @@
 from mininet.net import Mininet
 from mininet.topo import Topo, SingleSwitchTopo
 
-from p4_mininet import P4Host, P4Switch
+from p4_mininet import P4Host, P4RuntimeSwitch
 from p4_program import P4Program
-
-from p4runtime_switch import P4RuntimeSwitch
 
 class P4AppConfig:
     def __init__(self):
