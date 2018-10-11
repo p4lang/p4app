@@ -99,7 +99,7 @@ class SwitchConnection(object):
         else:
             self.client_stub.Write(request)
 
-    def write_group(self, group, update_type, dry_run=False):
+    def WriteGroup(self, group, update_type, dry_run=False):
         request = p4runtime_pb2.WriteRequest()
         request.device_id = self.device_id
         request.election_id.low = 1
@@ -113,11 +113,11 @@ class SwitchConnection(object):
             self.client_stub.Write(request)
 
     def CreateMulticastGroup(self, group):
-        return self.write_group(group, p4runtime_pb2.Update.INSERT)
+        return self.WriteGroup(group, p4runtime_pb2.Update.INSERT)
     def modify_group(self, group):
-        return self.write_group(group, p4runtime_pb2.Update.MODIFY)
+        return self.WriteGroup(group, p4runtime_pb2.Update.MODIFY)
     def delete_group(self, group):
-        return self.write_group(group, p4runtime_pb2.Update.DELETE)
+        return self.WriteGroup(group, p4runtime_pb2.Update.DELETE)
 
     def ReadTableEntries(self, table_id=None, dry_run=False):
         request = p4runtime_pb2.ReadRequest()
