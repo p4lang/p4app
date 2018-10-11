@@ -47,7 +47,7 @@ RUN apt-get update && \
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
 # Upgrade gRPC python bindings
-RUN pip install --upgrade grpcio
+RUN pip install --upgrade grpcio==1.15.0
 
 # Install mininet.
 COPY docker/third-party/mininet /third-party/mininet
