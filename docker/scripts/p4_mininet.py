@@ -76,7 +76,7 @@ class P4Host(Host):
         self.defaultIntf().rename("eth0")
 
         for off in ["rx", "tx", "sg"]:
-            cmd = "/sbin/ethtool --offload eth0 %s off" % off
+            cmd = "/sbin/ethtool --offload %s %s off" % (self.defaultIntf().name, off)
             self.cmd(cmd)
 
         # disable IPv6
@@ -354,6 +354,10 @@ class P4RuntimeSwitch(P4Switch):
             if self.p4info_path:
                 self.loadP4Info()
             self.loadJSON()
+
+    def stop(self):
+        if self.sw_conn: self.sw_conn.shutdown()
+        P4Switch.stop(self)
 
     def loadP4Info(self):
         self.p4info_helper = p4runtime_lib.helper.P4InfoHelper(self.p4info_path)
