@@ -1,5 +1,4 @@
-#!/usr/bin/env python2
-# Copyright 2013-present Barefoot Networks, Inc.
+# Copyright 2017-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,27 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-from __future__ import print_function
-
-import os
-import sys
-
-quiet = False
-
-def log(*items):
-    if quiet != True:
-        print(*items)
-
-def run_command(command):
-    log('>', command)
-    return os.WEXITSTATUS(os.system(command))
-
-def main():
-    args = sys.argv[1:]
-    rc = run_command("python /p4app/main.py " + ' '.join(args))
-
-    sys.exit(rc)
-
-if __name__ == '__main__':
-    main()
+import psutil
+def check_listening_on_port(port):
+    for c in psutil.net_connections(kind='inet'):
+        if c.status == 'LISTEN' and c.laddr[1] == port:
+            return True
+    return False
