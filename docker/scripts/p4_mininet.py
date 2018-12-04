@@ -22,6 +22,7 @@ import os
 import tempfile
 import socket
 from time import sleep
+import subprocess
 
 import grpc
 import p4runtime_lib.bmv2
@@ -212,6 +213,7 @@ class P4RuntimeSwitch(P4Switch):
     next_thrift_port = 9090
 
     def __init__(self, name, sw_path = None,
+                 enable_grpc = True,
                  grpc_port = None,
                  thrift_port = None,
                  pcap_dump = False,
@@ -221,6 +223,7 @@ class P4RuntimeSwitch(P4Switch):
                  verbose = False,
                  device_id = None,
                  enable_debugger = False,
+                 cli_path = None,
                  log_file = None,
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
@@ -229,7 +232,9 @@ class P4RuntimeSwitch(P4Switch):
         # make sure that the provided sw_path is valid
         pathCheck(sw_path)
 
+        self.cli_path = cli_path
         self.program = program
+        self.enable_grpc = enable_grpc
         json_path = None
         p4info_path = None
         if self.program:
@@ -254,9 +259,8 @@ class P4RuntimeSwitch(P4Switch):
         else:
             self.p4info_path = None
 
-        if grpc_port is not None:
-            self.grpc_port = grpc_port
-        else:
+        self.grpc_port = grpc_port
+        if self.enable_grpc and grpc_port is None:
             self.grpc_port = P4RuntimeSwitch.next_grpc_port
             P4RuntimeSwitch.next_grpc_port += 1
 
@@ -266,7 +270,7 @@ class P4RuntimeSwitch(P4Switch):
             self.thrift_port = P4RuntimeSwitch.next_thrift_port
             P4RuntimeSwitch.next_thrift_port += 1
 
-        if check_listening_on_port(self.grpc_port):
+        if enable_grpc and check_listening_on_port(self.grpc_port):
             error('%s cannot bind port %d because it is bound by another process\n' % (self.name, self.grpc_port))
             exit(1)
 
@@ -297,7 +301,9 @@ class P4RuntimeSwitch(P4Switch):
         for _ in range(SWITCH_START_TIMEOUT * 2):
             if not os.path.exists(os.path.join("/proc", str(pid))):
                 return False
-            if check_listening_on_port(self.grpc_port):
+            if self.enable_grpc and check_listening_on_port(self.grpc_port):
+                return True
+            elif self.thrift_port and check_listening_on_port(self.thrift_port):
                 return True
             sleep(0.5)
 
@@ -358,6 +364,19 @@ class P4RuntimeSwitch(P4Switch):
     def stop(self):
         if self.sw_conn: self.sw_conn.shutdown()
         P4Switch.stop(self)
+
+    def commands(self, cmd_list):
+        if not self.thrift_port:
+            raise Exception("Switch %s doesn't use Thrift, so there's no CLI support" % self.name)
+        print '\n'.join(cmd_list)
+        p = subprocess.Popen([self.cli_path, '--thrift-port', str(self.thrift_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        stdout, nostderr = p.communicate(input='\n'.join(cmd_list) + '\nEOF\n')
+        print stdout
+        raw_results = stdout.split('RuntimeCmd:')[1:len(cmd_list)+1]
+        return raw_results
+
+    def command(self, cmd):
+        return self.commands([cmd])[0]
 
     def loadP4Info(self):
         self.p4info_helper = p4runtime_lib.helper.P4InfoHelper(self.p4info_path)

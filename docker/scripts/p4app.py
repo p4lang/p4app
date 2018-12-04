@@ -8,6 +8,7 @@ class P4AppConfig:
     def __init__(self):
         self.simple_switch_path = 'simple_switch'
         self.simple_switch_grpc_path = 'simple_switch_grpc'
+        self.simple_switch_cli_path = 'simple_switch_CLI'
         self.bmv2_log = True
         self.log_dir = '/tmp/p4app-logs'
         self.pcap_dump = self.log_dir
@@ -25,14 +26,26 @@ def configureP4RuntimeSimpleSwitch(prog_or_filename, **switch_args):
     class ConfiguredP4RuntimeSwitch(P4RuntimeSwitch):
         def __init__(self, *opts, **kwargs):
 
+            if prog.version == 14:
+                switch_path = config.simple_switch_path
+                enable_grpc = False
+            elif prog.version == 16:
+                switch_path = config.simple_switch_grpc_path
+                enable_grpc = True
+            else:
+                raise Exception("Switch does not support P4 version " + str(prog.version))
+
             kwargs2 = dict(
-                sw_path=config.simple_switch_grpc_path,
+                enable_grpc=enable_grpc,
+                cli_path=config.simple_switch_cli_path,
+                sw_path=switch_path,
                 log_console=config.bmv2_log,
                 program=prog,
                 pcap_dump=config.pcap_dump,
                 )
             kwargs2.update(switch_args)
             kwargs2.update(kwargs)
+
             P4RuntimeSwitch.__init__(self, *opts, **kwargs2)
 
         def describe(self):
