@@ -34,8 +34,8 @@ class P4Program:
         compiler_args.append('"%s"' % self.prog_filename)
         compiler_args.append('-o "%s"' % self._json_path)
         if self.supportsP4Runtime():
-            self._p4info_path = os.path.join('/tmp/p4app-logs', self.name() + '.p4info')
-            compiler_args.append('--p4runtime-format text --p4runtime-file "%s"' % self._p4info_path)
+            self._p4info_path = os.path.join('/tmp/p4app-logs', self.name() + '.p4info.txt')
+            compiler_args.append('--p4runtime-files "%s"' % self._p4info_path)
         rv = run_command('p4c-bm2-ss %s' % ' '.join(compiler_args))
 
         if rv != 0:
