@@ -142,6 +142,19 @@ while the switch is running using `readCounter()`. From
 packet_count, byte_count = s1.readCounter('ingressPortCounter', port)
 ```
 
+Configuring P4-14 Programs
+--------------------------
+
+If you are running a P4-14 program, there is no P4Runtime support, so you won't
+be able to use the methods described above. Instead, you can use
+`simple_switch_CLI` to configure the runtime of a P4-14 program. p4app provides
+an interface to `simple_switch_CLI` through a `command()` method on each
+switch. For example, to add a table entry to switch `s1`:
+
+```
+s1.command('table_add ipv4_lpm set_nhop 10.0.0.10/32 => 10.0.0.10 1')
+```
+
 
 Executing Commands Interactively
 ================================
