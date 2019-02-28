@@ -45,7 +45,7 @@ function run-p4app {
   #          -v $XSOCK:$XSOCK \
   docker run --privileged --interactive --tty --rm \
             --name "$P4APP_NAME" \
-            -v $1:$APP_TO_RUN \
+            -v "$1":"$APP_TO_RUN" \
             -v "$P4APP_LOGDIR":/tmp/p4app-logs \
              $P4APP_CONTAINER_ARGS \
              $P4APP_IMAGE "${@:2}"
