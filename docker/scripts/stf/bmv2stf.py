@@ -387,6 +387,9 @@ class RunBMV2(object):
                 data = ''.join(data.split())
             if data != '':
                 self.expected.setdefault(interface, []).append(data)
+            else:
+                # No data provided: expect 0 packets on this intf.
+                self.expected.setdefault(interface, [])
         else:
             if self.options.verbose:
                 print("ignoring stf command:", first, cmd)
