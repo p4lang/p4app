@@ -46,10 +46,21 @@ sw.addMulticastGroup(mgid=mgid, ports=range(1, n+1))
 loss = net.pingAll()
 assert loss == 0
 
-# Should receive a pong from h2 and h3 (i.e. a duplicate pong)
+# Should receive a pong from h2 and h3 (i.e. a duplicate pong).
 out = net.get('h1').cmd('ping -c2 10.0.0.255')
 print out
 assert 'from 10.0.0.3' in out
 assert 'from 10.0.0.2' in out
+
+# Update group. Should only receive a pong from h2.
+sw.updateMulticastGroup(mgid=mgid, ports=[2])
+out = net.get('h1').cmd('ping -c2 10.0.0.255')
+assert 'from 10.0.0.2' in out
+assert 'from 10.0.0.3' not in out
+
+# Delete group. Packets should not be forwarded.
+sw.deleteMulticastGroup(mgid=mgid, ports=[])
+out = net.get('h1').cmd('ping -W1 -c2 10.0.0.255')
+assert '0 received, 100% packet loss' in out
 
 print "OK"

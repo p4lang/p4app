@@ -138,6 +138,13 @@ You can add multicast groups using `addMulticastGroup()`. From
 sw.addMulticastGroup(mgid=mgid, ports=range(1, n+1))
 ```
 
+You can also update and delete multicast groups:
+
+```
+sw.updateMulticastGroup(mgid=mgid, ports=[2])
+sw.deleteMulticastGroup(mgid=mgid, ports=[])
+```
+
 Reading Counters
 ----------------
 
