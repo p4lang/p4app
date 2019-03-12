@@ -1,1 +1,0 @@
-table_add forward set_dmac 255.255.255.255 => ff:ff:ff:ff:ff:ff
