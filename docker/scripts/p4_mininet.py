@@ -445,6 +445,20 @@ class P4RuntimeSwitch(P4Switch):
         except grpc.RpcError as e:
             printGrpcError(e)
 
+    def deleteMulticastGroup(self, mgid=None, ports=None):
+        group = self.p4info_helper.buildMulticastGroup(mgid=mgid, ports=ports)
+        try:
+            self.sw_conn.DeleteMulticastGroup(group)
+        except grpc.RpcError as e:
+            printGrpcError(e)
+
+    def updateMulticastGroup(self, mgid=None, ports=None):
+        group = self.p4info_helper.buildMulticastGroup(mgid=mgid, ports=ports)
+        try:
+            self.sw_conn.UpdateMulticastGroup(group)
+        except grpc.RpcError as e:
+            printGrpcError(e)
+
     def printTableEntries(self):
         """
         Prints the table entries from all tables on the switch.

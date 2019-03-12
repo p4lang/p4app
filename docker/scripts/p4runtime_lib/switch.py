@@ -114,9 +114,9 @@ class SwitchConnection(object):
 
     def CreateMulticastGroup(self, group):
         return self.WriteGroup(group, p4runtime_pb2.Update.INSERT)
-    def modify_group(self, group):
+    def UpdateMulticastGroup(self, group):
         return self.WriteGroup(group, p4runtime_pb2.Update.MODIFY)
-    def delete_group(self, group):
+    def DeleteMulticastGroup(self, group):
         return self.WriteGroup(group, p4runtime_pb2.Update.DELETE)
 
     def ReadTableEntries(self, table_id=None, dry_run=False):
