@@ -114,12 +114,19 @@ sw.insertTableEntry(table_name='MyIngress.ipv4_lpm',
 You can also set a table's default action with `default_action=True`:
 
 ```
-    sw.insertTableEntry(table_name='MyIngress.ipv4_lpm',
-                        default_action=True,
-                        action_name='MyIngress.ipv4_forward',
-                        action_params={'dstAddr': '00:00:00:00:00:00',
-                                          'port': 2})
+sw.insertTableEntry(table_name='MyIngress.ipv4_lpm',
+                    default_action=True,
+                    action_name='MyIngress.ipv4_forward',
+                    action_params={'dstAddr': '00:00:00:00:00:00',
+                                      'port': 2})
 ```
+
+To inspect all the table entries for a switch, you can use:
+
+```
+sw.printTableEntries()
+```
+
 
 Multicast Groups
 ----------------

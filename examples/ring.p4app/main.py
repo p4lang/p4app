@@ -48,6 +48,7 @@ for i in range(1, N+1):
                         action_params={'dstAddr': '00:00:00:00:00:00', # the last hop will set this correctly
                                           'port': 2})
 
+    sw.printTableEntries()
 
 net.pingAll()
 
