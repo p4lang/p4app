@@ -9,7 +9,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
         hdr.ethernet.srcAddr = smac;
     }
     action _drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     table send_frame {
         actions = {
@@ -32,7 +32,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
     action _drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
         meta.ingress_metadata.nhop_ipv4 = nhop_ipv4;

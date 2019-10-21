@@ -84,7 +84,7 @@ control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_
 control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
 
     action _drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
 
     action set_UDPdstPort(bit<16> dstPort) {
