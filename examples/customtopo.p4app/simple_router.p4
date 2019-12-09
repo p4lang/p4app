@@ -9,7 +9,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
         hdr.ethernet.srcAddr = smac;
     }
     @name("_drop") action _drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     @name("send_frame") table send_frame {
         actions = {
@@ -33,7 +33,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
 control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
     register<bit<32>>(1) forward_count_register;
     @name("_drop") action _drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     action increment_counter() {
         bit<32> forward_count;
