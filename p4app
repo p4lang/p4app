@@ -84,6 +84,30 @@ function run-command {
   return $rc
 }
 
+function test-command {
+  # Run the .p4app package provided by the user.
+  if [ -d "$1" ]; then
+    # The user passed the package as a directory. Tar it up and pass it to the
+    # container.
+    PACKAGE_DIR=$(normalize_path "$1")
+    APP_FILE=$(mktemp /tmp/p4app.tar.gz.XXXXXX)
+    tar -czf "$APP_FILE" -C "$PACKAGE_DIR" .
+    run-p4app "$APP_FILE" --tests "${@:2}"
+    rc=$?
+    rm "$APP_FILE"
+  elif [ -f "$1" ]; then
+    # The user passed the package as a file. We'll assume it's already a .tar.gz
+    # archive; just pass it to the container as-is.
+    APP_FILE=$(get_abs_filename "$1")
+    run-p4app "$APP_FILE" --tests "${@:2}"
+    rc=$?
+  else
+    echo "Couldn't read p4app package: $1"
+    exit 1
+  fi
+  return $rc
+}
+
 function pack-command {
   # Compress the provided .p4app package.
   if [ -d "$1" ]; then
@@ -165,6 +189,9 @@ function usage-command {
 case "$1" in
   "run")
     run-command "${@:2}"
+    ;;
+  "test")
+    test-command "${@:2}"
     ;;
   "build")
     build-command "${@:2}"

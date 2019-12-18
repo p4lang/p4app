@@ -29,6 +29,8 @@ parser.add_argument('--quiet', help='Suppress log messages.',
                     action='store_true', required=False, default=False)
 parser.add_argument('--build-only', help='Compile the program, but do not run it.',
                     action='store_true', required=False, default=False)
+parser.add_argument('--tests', help='Run all tests listed in the manifest.',
+                    action='store_true', required=False, default=False)
 parser.add_argument('--json', help='Use this compiled JSON file instead of compiling.',
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--manifest', help='Path to manifest file.',
@@ -52,13 +54,19 @@ def run_command(command):
     return os.WEXITSTATUS(os.system(command))
 
 class Manifest:
-    def __init__(self, program_file, language, target, target_config):
+    def __init__(self, program_file, language, target, targets, tests=()):
         self.program_file = program_file
         self.language = language
         self.target = target
-        self.target_config = target_config
+        self.targets = targets
+        self.tests = tests
 
-def read_manifest(manifest_file):
+    @property
+    def target_config(self):
+        return self.targets[self.target]
+
+
+def read_manifest(manifest_file, target):
     manifest = json.load(manifest_file, object_pairs_hook=OrderedDict)
 
     if 'program' not in manifest:
@@ -75,8 +83,8 @@ def read_manifest(manifest_file):
         log_error('No targets defined in manifest.')
         sys.exit(1)
 
-    if args.target is not None:
-        chosen_target = args.target
+    if target is not None:
+        chosen_target = target
     elif 'default-target' in manifest:
         chosen_target = manifest['default-target']
     else:
@@ -86,7 +94,11 @@ def read_manifest(manifest_file):
         log_error('Target not found in manifest:', chosen_target)
         sys.exit(1)
 
-    return Manifest(program_file, language, chosen_target, manifest['targets'][chosen_target])
+    return Manifest(program_file, language,
+                    target=chosen_target,
+                    targets=manifest['targets'],
+                    tests=manifest.get('test_list', []))
+
 
 def get_program_name(program_file):
     return os.path.basename(program_file).rstrip('.p4')
@@ -136,6 +148,21 @@ def run_compile_bmv2(manifest):
         sys.exit(1)
 
     return output_file
+
+
+def run_tests(manifest):
+    results = {}
+    for test in manifest.tests:
+        print('{0}\n!!! Running test: {1}\n{0}\n'.format(
+            '!' * 70, test))
+        manifest.target = test
+        rv = run_stf(manifest)
+        results[test] = rv
+    print('TEST SUMMARY')
+    for test, rv in results.iteritems():
+        print('{}: {}'.format(test, 'FAIL' if rv else 'PASS'))
+    return 0
+
 
 def run_mininet(manifest):
     output_file = run_compile_bmv2(manifest)
@@ -292,7 +319,7 @@ def main():
 
     log('Reading package manifest.')
     with open(args.manifest, 'r') as manifest_file:
-        manifest = read_manifest(manifest_file)
+        manifest = read_manifest(manifest_file, args.target)
 
     # Dispatch to the backend implementation for this target.
     backend = manifest.target
@@ -302,6 +329,8 @@ def main():
     if args.build_only or backend == 'compile-bmv2':
         build_only(manifest)
         rc = 0
+    elif args.tests:
+        rc = run_tests(manifest)
     elif backend == 'mininet':
         rc = run_mininet(manifest)
     elif backend == 'multiswitch':
@@ -317,4 +346,5 @@ def main():
     sys.exit(rc)
 
 if __name__ == '__main__':
+    print('p4apprunner {}'.format(sys.argv))
     main()
