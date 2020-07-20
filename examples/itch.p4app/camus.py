@@ -1,4 +1,5 @@
 import os
+import json
 from tempfile import mktemp
 
 COMPILER_PATH = './camus-compiler'
@@ -16,6 +17,7 @@ def generateQueryPipeline(spec_path=None, out_path=None):
     return True
 
 def compileRules(spec_path=None,
+        ingress_name=None,
         rules=None, rules_path=None, out_prefix=None):
 
     if out_prefix is None:
@@ -42,31 +44,26 @@ def compileRules(spec_path=None,
         cli_commands = f.read()
     with open(out_prefix + '_mcast_groups.txt', 'r') as f:
         mcast_groups = f.read()
+    with open(out_prefix + '_entries.json', 'r') as f:
+        entries = json.load(f)
 
-    return dict(cli_commands=cli_commands, mcast_groups=mcast_groups)
+    def prependIngressName(entry):
+        if 'table_name' in entry: entry['table_name'] = '%s.%s' % (ingress_name, entry['table_name'])
+        if 'action_name' in entry: entry['action_name'] = '%s.%s' % (ingress_name, entry['action_name'])
+        return entry
+
+    if ingress_name:
+        entries = map(prependIngressName, entries)
+
+    return dict(cli_commands=cli_commands, mcast_groups=mcast_groups, entries=entries)
 
 def parseMcastGroups(mcast_groups_str):
     """ Parse a string of mcast groups to a dictionary """
     groups = {}
     for l in mcast_groups_str.split('\n'):
-        print l
         mgid, ports = l.split(':')
         groups[int(mgid)] = map(int, ports.split())
     return groups
-
-def parseCliCommands(cli_commands):
-    """ Convert cli commands to P4Runtime """
-    for l in cli_commands.split('\n'):
-        p = l.split()
-        if p[0] == 'table_add':
-            is_ternary = '->' in l or '&&' in l
-            table_name, action_name = p[1:3]
-            matches = p[3:p.index('=>')]
-            args = p[p.index('=>')+1 : (-1 if is_ternary else None)]
-            priority = p[-1] if is_ternary else None
-            print table_name, matches, args, priority
-        else:
-            raise Exception("Unsupported simple_cli command: " + p[0])
 
 class RuntimeConfig:
 
@@ -76,19 +73,21 @@ class RuntimeConfig:
     def mcastGroups(self):
         return parseMcastGroups(self.raw['mcast_groups'])
 
-    def p4runtime(self):
-        return parseCliCommands(self.raw['cli_commands'])
+    def entries(self):
+        return self.raw['entries']
 
 class CamusApp:
 
-    def __init__(self, spec_path=None):
+    def __init__(self, spec_path=None, ingress_name=None):
         self.spec_path = spec_path
+        self.ingress_name = ingress_name
 
     def generateQueryPipeline(self, out_path):
         generateQueryPipeline(self.spec_path, out_path)
 
     def compileRules(self, **kwargs):
         if 'spec_path' not in kwargs: kwargs['spec_path'] = self.spec_path
+        if self.ingress_name and 'ingress_name' not in kwargs: kwargs['ingress_name'] = self.ingress_name
         config = compileRules(**kwargs)
         assert config
         return RuntimeConfig(config)
@@ -105,5 +104,4 @@ if __name__ == '__main__':
     camus_runtime = compileRules(spec_path='spec.p4', rules=rules)
 
     print parseMcastGroups(camus_runtime['mcast_groups'])
-    print parseCliCommands(camus_runtime['cli_commands'])
 
