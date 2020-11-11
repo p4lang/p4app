@@ -72,20 +72,20 @@ def parseGrpcErrorBinaryDetails(grpc_error):
 # batch) in order to print error code + user-facing message. See P4Runtime
 # documentation for more details on error-reporting.
 def printGrpcError(grpc_error):
-    print "gRPC Error", grpc_error.details(),
+    print("gRPC Error", grpc_error.details(), end=' ')
     status_code = grpc_error.code()
-    print "({})".format(status_code.name),
+    print("({})".format(status_code.name), end=' ')
     traceback = sys.exc_info()[2]
-    print "[{}:{}]".format(
-        traceback.tb_frame.f_code.co_filename, traceback.tb_lineno)
+    print("[{}:{}]".format(
+        traceback.tb_frame.f_code.co_filename, traceback.tb_lineno))
     if status_code != grpc.StatusCode.UNKNOWN:
         return
     p4_errors = parseGrpcErrorBinaryDetails(grpc_error)
     if p4_errors is None:
         return
-    print "Errors in batch:"
+    print("Errors in batch:")
     for idx, p4_error in p4_errors:
         code_name = code_pb2._CODE.values_by_number[
             p4_error.canonical_code].name
-        print "\t* At index {}: {}, '{}'\n".format(
-            idx, code_name, p4_error.message)
+        print("\t* At index {}: {}, '{}'\n".format(
+            idx, code_name, p4_error.message))

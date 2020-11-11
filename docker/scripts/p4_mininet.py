@@ -65,7 +65,7 @@ def _byteify(data, ignore_dicts=False):
     if isinstance(data, dict) and not ignore_dicts:
         return {
             _byteify(key, ignore_dicts=True): _byteify(value, ignore_dicts=True)
-            for key, value in data.iteritems()
+            for key, value in data.items()
         }
     # if it's anything else, return it in its original form
     return data
@@ -88,14 +88,14 @@ class P4Host(Host):
         return r
 
     def describe(self):
-        print "**********"
-        print self.name
-        print "default interface: %s\t%s\t%s" %(
+        print ("**********")
+        print (self.name)
+        print ("default interface: %s\t%s\t%s" %(
             self.defaultIntf().name,
             self.defaultIntf().IP(),
             self.defaultIntf().MAC()
-        )
-        print "**********"
+        ))
+        print ("**********")
 
 class P4Switch(Switch):
     """P4 virtual switch"""
@@ -368,10 +368,10 @@ class P4RuntimeSwitch(P4Switch):
     def commands(self, cmd_list):
         if not self.thrift_port:
             raise Exception("Switch %s doesn't use Thrift, so there's no CLI support" % self.name)
-        print '\n'.join(cmd_list)
+        print('\n'.join(cmd_list))
         p = subprocess.Popen([self.cli_path, '--thrift-port', str(self.thrift_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, nostderr = p.communicate(input='\n'.join(cmd_list) + '\nEOF\n')
-        print stdout
+        print(stdout)
         raw_results = stdout.split('RuntimeCmd:')[1:len(cmd_list)+1]
         return raw_results
 
@@ -418,8 +418,8 @@ class P4RuntimeSwitch(P4Switch):
                         table_name=None, match_fields=None, action_name=None,
                         default_action=None, action_params=None, priority=None):
         if entry is not None:
-            table_name = entry['table']
-            match_fields = entry.get('match') # None if not found
+            table_name = entry['table_name']
+            match_fields = entry.get('match_fields') # None if not found
             action_name = entry['action_name']
             default_action = entry.get('default_action') # None if not found
             action_params = entry['action_params']
@@ -465,22 +465,22 @@ class P4RuntimeSwitch(P4Switch):
         :param p4info_helper: the P4Info helper
         :param sw: the switch connection
         """
-        print '\n----- Reading tables rules for %s -----' % self.sw_conn.name
+        print('\n----- Reading tables rules for %s -----' % self.sw_conn.name)
         for response in self.sw_conn.ReadTableEntries():
             for entity in response.entities:
                 entry = entity.table_entry
                 table_name = self.p4info_helper.get_tables_name(entry.table_id)
-                print '%s: ' % table_name,
+                print ('%s: ' % table_name, end=' ')
                 for m in entry.match:
-                    print self.p4info_helper.get_match_field_name(table_name, m.field_id),
-                    print '%r' % (self.p4info_helper.get_match_field_value(m),),
+                    print(self.p4info_helper.get_match_field_name(table_name, m.field_id), end=' ')
+                    print('%r' % (self.p4info_helper.get_match_field_value(m),), end=' ')
                 action = entry.action.action
                 action_name = self.p4info_helper.get_actions_name(action.action_id)
-                print '->', action_name,
+                print('->', action_name, end=' ')
                 for p in action.params:
-                    print self.p4info_helper.get_action_param_name(action_name, p.param_id),
-                    print '%r' % p.value,
-                print
+                    print(self.p4info_helper.get_action_param_name(action_name, p.param_id), end=' ')
+                    print('%r' % p.value, end=' ')
+                print()
 
     def readCounter(self, counter_name, index):
         """
