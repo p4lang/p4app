@@ -437,6 +437,29 @@ class P4RuntimeSwitch(P4Switch):
         except grpc.RpcError as e:
             printGrpcError(e)
 
+    def removeTableEntry(self, entry=None,
+                        table_name=None, match_fields=None, action_name=None,
+                        default_action=None, action_params=None, priority=None):
+        if entry is not None:
+            table_name = entry['table_name']
+            match_fields = entry.get('match_fields') # None if not found
+            action_name = entry['action_name']
+            default_action = entry.get('default_action') # None if not found
+            action_params = entry['action_params']
+            priority = entry.get('priority')  # None if not found
+
+        table_entry = self.p4info_helper.buildTableEntry(
+            table_name=table_name,
+            match_fields=match_fields,
+            default_action=default_action,
+            action_name=action_name,
+            action_params=action_params,
+            priority=priority)
+        try:
+            self.sw_conn.DeleteTableEntry(table_entry)
+        except grpc.RpcError as e:
+            printGrpcError(e)
+
 
     def addMulticastGroup(self, mgid=None, ports=None):
         group = self.p4info_helper.buildMulticastGroup(mgid=mgid, ports=ports)
