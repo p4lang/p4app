@@ -10,7 +10,7 @@ class SingleSwitchTopo(Topo):
 
         sw = self.addSwitch('s1')
 
-        for i in xrange(1, n+1):
+        for i in range(1, n+1):
             host = self.addHost('h%d' % i,
                                 ip = "10.0.0.%d" % i,
                                 mac = '00:00:00:00:00:%02x' % i)
@@ -48,7 +48,7 @@ assert loss == 0
 
 # Should receive a pong from h2 and h3 (i.e. a duplicate pong).
 out = net.get('h1').cmd('ping -c2 10.0.0.255')
-print out
+print(out)
 assert 'from 10.0.0.3' in out
 assert 'from 10.0.0.2' in out
 
@@ -63,4 +63,4 @@ sw.deleteMulticastGroup(mgid=mgid, ports=[])
 out = net.get('h1').cmd('ping -W1 -c2 10.0.0.255')
 assert '0 received, 100% packet loss' in out
 
-print "OK"
+print("OK")

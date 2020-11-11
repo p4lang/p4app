@@ -9,7 +9,7 @@ net.start()
 h1 = net.get('h1')
 proc = h1.popen('ping -c2 ' + net.get('h2').intfs[0].ip)
 stdout, stderr = proc.communicate()
-print stdout, stderr
+print(stdout, stderr)
 assert proc.returncode == 0
 
-print "OK"
+print("OK")

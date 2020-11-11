@@ -20,13 +20,13 @@ net.start()
 
 
 # Core switches should forward all traffic down
-for core in range(topo.core_count):
+for core in range(int(topo.core_count)):
     sw = net.get('cs_%d' % core)
     sw.insertTableEntry(table_name='MyIngress.packet_direction',
                         default_action=True,
                         action_name='MyIngress.direction_is_down')
 
-non_core_switches = [(t, pod, x) for t in ['as', 'es'] for pod in range(topo.pod_count) for x in range(topo.edge_count/topo.pod_count)]
+non_core_switches = [(t, pod, x) for t in ['as', 'es'] for pod in range(int(topo.pod_count)) for x in range(int(topo.edge_count/topo.pod_count))]
 
 # Add rules for detecting whether a packet is going up or down the tree
 for sw_type,pod,x in non_core_switches:
@@ -47,7 +47,7 @@ for sw_type,pod,x in non_core_switches:
 
 
 
-hosts = [(pod, edge, host) for pod in range(K) for edge in range(K/2) for host in range(K/2)]
+hosts = [(pod, edge, host) for pod in range(int(K)) for edge in range(int(K/2)) for host in range(int(K/2))]
 
 # IPv4 routing
 for pod,edge,host in hosts:
@@ -58,12 +58,12 @@ for pod,edge,host in hosts:
     edge_port = getPort(topo.linkInfo(edge_sw.name, host_name), edge_sw.name)
     hops.append((edge_sw, edge_port))
 
-    for aggr in range(topo.aggr_count / topo.pod_count):
+    for aggr in range(int(topo.aggr_count / topo.pod_count)):
         aggr_sw = net.get('as_%d_%d' % (pod, aggr))
         port = getPort(topo.linkInfo(edge_sw.name, aggr_sw.name), aggr_sw.name)
         hops.append((aggr_sw, port))
 
-        for core in range((K/2)*aggr, (K/2)*(aggr+1)):
+        for core in range(int((K/2)*aggr), int((K/2)*(aggr+1))):
             core_sw = net.get('cs_%d' % core)
             port = getPort(topo.linkInfo(aggr_sw.name, core_sw.name), core_sw.name)
             hops.append((core_sw, port))
@@ -92,8 +92,10 @@ for sw_name in topo.switches():
     sw = net.get(sw_name)
     for entry in runtime_config.entries():
         sw.insertTableEntry(**entry)
-    for mgid,ports in runtime_config.mcastGroups().iteritems():
+    for mgid,ports in runtime_config.mcastGroups().items():
         sw.addMulticastGroup(mgid=mgid, ports=ports)
+
+print("populated")
 
 
 #net.pingAll()
@@ -104,9 +106,11 @@ subscriber1 = h1.popen('./subscriber.py 1234', stdout=sys.stdout, stderr=sys.std
 subscriber2 = h2.popen('./subscriber.py 1234', stdout=sys.stdout, stderr=sys.stdout)
 subscriber3 = h3.popen('./subscriber.py 1234', stdout=sys.stdout, stderr=sys.stdout)
 time.sleep(0.4)
+print("started subscribers")
 
 h4.cmd('./publisher.py 10.255.255.255 1234')
 time.sleep(0.4)
+print("shutting down")
 
 subscriber1.terminate()
 subscriber2.terminate()

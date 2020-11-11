@@ -22,7 +22,7 @@ assert out.strip() == "2 11"
 # XXX GRPC errors with "Register reads are not supported yet"
 # TODO: test this once there's support for reading registers with p4runtime
 #s1 = net.get('s1')
-#print "about to read reg"
-#print s1.readRegister('myReg', 1)
+#print("about to read reg")
+#print(s1.readRegister('myReg', 1))
 
-print "OK"
+print("OK")
