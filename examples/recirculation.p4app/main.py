@@ -9,7 +9,7 @@ h1 = net.get('h1')
 # Send one ICMP packet (timeout after 2 seconds)
 out = h1.cmd('ping -c1 -W2 10.0.0.2')
 
-print out
+print(out)
 assert "ttl=0" in out, "The switch should decrement the IP ttl field"
 
-print "OK"
+print("OK")

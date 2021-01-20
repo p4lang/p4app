@@ -6,7 +6,7 @@ COMPILER_PATH = './camus-compiler'
 CAMUS_BIN = os.path.join(COMPILER_PATH, 'camus.exe')
 
 def run_command(command):
-    print '>', command
+    print('>', command)
     return os.WEXITSTATUS(os.system(command))
 
 
@@ -28,7 +28,7 @@ def compileRules(spec_path=None,
         rules_path = mktemp()
         with open(rules_path, 'w') as f:
             rules_str = rules
-            if not isinstance(rules, basestring):
+            if not isinstance(rules, str):
                 rules_str = ''
                 for r in rules:
                     r = r.strip()
@@ -53,7 +53,7 @@ def compileRules(spec_path=None,
         return entry
 
     if ingress_name:
-        entries = map(prependIngressName, entries)
+        entries = map(prependIngressName, [e for e in entries if e is not None])
 
     return dict(cli_commands=cli_commands, mcast_groups=mcast_groups, entries=entries)
 
@@ -103,5 +103,5 @@ if __name__ == '__main__':
 
     camus_runtime = compileRules(spec_path='spec.p4', rules=rules)
 
-    print parseMcastGroups(camus_runtime['mcast_groups'])
+    print(parseMcastGroups(camus_runtime['mcast_groups']))
 

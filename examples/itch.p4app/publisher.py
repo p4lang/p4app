@@ -5,7 +5,7 @@ import socket
 from itch_message import MoldPacket, AddOrderMessage
 
 if len(sys.argv) != 3:
-    print "Usage: %s HOST PORT" % sys.argv[0]
+    print("Usage: %s HOST PORT" % sys.argv[0])
     sys.exit(1)
 
 host = sys.argv[1]

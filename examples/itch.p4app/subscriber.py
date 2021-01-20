@@ -8,7 +8,7 @@ mold_msg_hdr_size = 2
 
 
 if len(sys.argv) != 2:
-    print "Usage: %s PORT" % sys.argv[0]
+    print("Usage: %s PORT" % sys.argv[0])
     sys.exit(1)
 
 port = int(sys.argv[1])
@@ -21,5 +21,5 @@ while True:
     ao_data = data[mold_hdr_struct.size + mold_msg_hdr_size:]
     assert len(ao_data) == add_order_struct.size
     messagetype, stocklocate, trackingnumber, timestamp, orderreferencenumber, buysellindicator, shares, stock, price = add_order_struct.unpack(ao_data)
-    print dict(stock=stock, shares=shares, price=price)
+    print(dict(stock=stock, shares=shares, price=price))
 

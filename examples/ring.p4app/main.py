@@ -7,7 +7,7 @@ if len(sys.argv) > 1:
 else:
     N = 3
 
-print "Setting-up a %d-switch ring topology" % N
+print("Setting-up a %d-switch ring topology" % N)
 
 class RingTopo(Topo):
     def __init__(self, n, **opts):
@@ -15,7 +15,7 @@ class RingTopo(Topo):
 
         switches = []
 
-        for i in xrange(1, n+1):
+        for i in range(1, n+1):
             host = self.addHost('h%d' % i,
                                 ip = "10.0.0.%d" % i,
                                 mac = '00:00:00:00:00:%02x' % i)
@@ -24,7 +24,7 @@ class RingTopo(Topo):
             switches.append(switch)
 
         # Port 2 connects to the next switch in the ring, and port 3 to the previous
-        for i in xrange(n):
+        for i in range(n):
             self.addLink(switches[i], switches[(i+1)%n], port1=2, port2=3)
 
 topo = RingTopo(N)
@@ -52,4 +52,4 @@ for i in range(1, N+1):
 
 net.pingAll()
 
-print "OK"
+print("OK")

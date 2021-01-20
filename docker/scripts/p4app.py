@@ -49,7 +49,7 @@ def configureP4RuntimeSimpleSwitch(prog_or_filename, **switch_args):
             P4RuntimeSwitch.__init__(self, *opts, **kwargs2)
 
         def describe(self):
-            print "%s -> gRPC port: %d" % (self.name, self.grpc_port)
+            print("%s -> gRPC port: %d" % (self.name, self.grpc_port))
     return ConfiguredP4RuntimeSwitch
 
 class P4Mininet(Mininet):

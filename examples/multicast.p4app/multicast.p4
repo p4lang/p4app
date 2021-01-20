@@ -88,7 +88,7 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
     action drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     action decr_ttl() {
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
@@ -133,7 +133,7 @@ control MyEgress(inout headers hdr,
         hdr.ipv4.dstAddr = ip;
     }
     action drop() {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
     table send_frame {
         key = {

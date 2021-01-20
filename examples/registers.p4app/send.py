@@ -11,7 +11,7 @@ OP_WRITE = 2
 hdr = struct.Struct('!B B I') # op_type idx [val]
 
 if len(sys.argv) < 4:
-    print "Usage: %s HOST READ|WRITE IDX [VALUE]" % sys.argv[0]
+    print("Usage: %s HOST READ|WRITE IDX [VALUE]" % sys.argv[0])
     sys.exit(1)
 
 host = sys.argv[1]
@@ -34,4 +34,4 @@ res, addr2 = s.recvfrom(1024)
 
 op_type, idx2, val2 = hdr.unpack(res)
 
-print idx2, val2
+print(idx2, val2)

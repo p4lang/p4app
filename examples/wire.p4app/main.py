@@ -12,4 +12,4 @@ assert loss == 0
 from mininet.cli import CLI
 CLI(net)
 
-print "OK"
+print("OK")

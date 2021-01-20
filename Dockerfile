@@ -8,10 +8,8 @@ ENV NET_TOOLS iputils-arping \
               iputils-tracepath \
               net-tools \
               nmap \
-              python-ipaddr \
-              python-scapy \
-              python-psutil \
-              python-pip \
+              python3-pip \
+              python3-dev \
               tcpdump \
               traceroute \
               tshark
@@ -34,20 +32,20 @@ ENV MININET_DEPS automake \
                  pep8 \
                  pyflakes \
                  pylint \
-                 python-pexpect \
-                 python-setuptools
+                 python3-pexpect \
+                 python3-setuptools
 
 # Ignore questions when installing with apt-get:
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends $NET_TOOLS $MININET_DEPS
+    apt-get install -y -o Dpkg::Options::='--force-confdef' --no-install-recommends $NET_TOOLS $MININET_DEPS
 
 # Fix to get tcpdump working
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
-# Upgrade gRPC python bindings
-RUN pip install --upgrade grpcio==1.15.0
+# Install python3 packages
+RUN pip install ipaddr scapy psutil
 
 # Install mininet.
 COPY docker/third-party/mininet /third-party/mininet

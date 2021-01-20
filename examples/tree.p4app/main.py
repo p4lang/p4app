@@ -1,7 +1,7 @@
 from p4app import P4Mininet
 from mininet.topolib import TreeTopo
 
-def printDot(topo): print 'digraph {\n' + '\n'.join('%s -> %s;' % l for l in topo.links()) + '\n}'
+def printDot(topo): print('digraph {\n' + '\n'.join('%s -> %s;' % l for l in topo.links()) + '\n}')
 
 topo = TreeTopo(depth=2, fanout=2)
 
@@ -41,4 +41,4 @@ for host, port in [(3, 1), (4, 2)]:
 loss = net.pingAll()
 assert loss == 0
 
-print "OK"
+print("OK")

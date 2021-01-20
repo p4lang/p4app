@@ -13,4 +13,4 @@ for port in [1, 2]:
     packet_count, byte_count = s1.readCounter('ingressPortCounter', port)
     assert packet_count == 2
 
-print "OK"
+print("OK")

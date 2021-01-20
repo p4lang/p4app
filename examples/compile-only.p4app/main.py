@@ -19,4 +19,4 @@ with open(prog14.json(), 'r') as f:
     bmv2_json = json.load(f)
 
 
-print "OK"
+print("OK")

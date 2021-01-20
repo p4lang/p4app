@@ -27,7 +27,7 @@ class CamusTopo(Topo):
         return getPort(self.linkInfo(host, switch), switch)
 
     def subscribe(self, host, queries):
-        if isinstance(queries, basestring):
+        if isinstance(queries, str):
             queries = [queries]
 
         switch = self.hostSwitch(host)
@@ -69,30 +69,30 @@ class FatTreeTopo(CamusTopo):
 
         self.upstream_for_sw = {}
 
-        for core in range(self.core_count):
+        for core in range(int(self.core_count)):
             core_sw = 'cs_%d' % core
             self.addSwitch(core_sw)
             self.upstream_for_sw[core_sw] = []
 
-        for pod in range(self.pod_count):
+        for pod in range(int(self.pod_count)):
 
-            for aggr in range(self.aggr_count / self.pod_count):
+            for aggr in range(int(self.aggr_count / self.pod_count)):
                 aggr_sw = self.addSwitch('as_%d_%d' % (pod, aggr))
                 self.upstream_for_sw[aggr_sw] = []
-                for core in range((K/2)*aggr, (K/2)*(aggr+1)):
+                for core in range(int((K/2)*aggr), int((K/2)*(aggr+1))):
                     core_sw = 'cs_%d' % core
                     self.addLink(aggr_sw, core_sw)
                     self.upstream_for_sw[aggr_sw].append(core_sw)
 
-            for edge in range(self.edge_count / self.pod_count):
+            for edge in range(int(self.edge_count / self.pod_count)):
                 edge_sw = self.addSwitch('es_%d_%d' % (pod, edge))
                 self.upstream_for_sw[edge_sw] = []
-                for aggr in range(self.edge_count / self.pod_count):
+                for aggr in range(int(self.edge_count / self.pod_count)):
                     aggr_sw = 'as_%d_%d' % (pod, aggr)
                     self.addLink(edge_sw, aggr_sw)
                     self.upstream_for_sw[edge_sw].append(aggr_sw)
 
-                for h in range(K/2):
+                for h in range(int(K/2)):
                     host = self.addHost('h_%d_%d_%d' % (pod, edge, h),
                                             ip = '10.%d.%d.%d' % (pod, edge, h+1),
                                             mac = '00:00:00:%02x:%02x:%02x' % (pod, edge, h+1))
