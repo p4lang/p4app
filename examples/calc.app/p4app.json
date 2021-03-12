@@ -1,0 +1,10 @@
+{
+  "program": "calc.p4",
+  "language": "p4-16",
+  "targets": {
+    "mininet": {
+      "num-hosts": 1,
+      "switch-config": "calc.config"
+    }
+  }
+}
