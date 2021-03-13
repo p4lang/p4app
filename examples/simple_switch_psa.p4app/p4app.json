@@ -1,0 +1,13 @@
+{
+  "program": "simple_switch.p4",
+  "language": "p4-16",
+  "targets": {
+    "mininet": {
+      "compiler": "p4c-bm2-psa",
+      "behavioral-exe": "psa_switch",
+      "cli-path": "psa_switch_CLI",
+      "num-hosts": 2,
+      "switch-config": "simple_switch.config"
+    }
+  }
+}
