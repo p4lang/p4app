@@ -22,6 +22,11 @@ import os
 import sys
 import tarfile
 
+DEFAULT_BEHAVIORAL_EXE = 'simple_switch'
+
+def default_cli_path(behavioral_exe):
+    return '%s_CLI' % behavioral_exe
+
 parser = argparse.ArgumentParser(description='p4apprunner')
 parser.add_argument('--build-dir', help='Directory to build in.',
                     type=str, action='store', required=False, default='/tmp')
@@ -92,6 +97,8 @@ def get_program_name(program_file):
     return os.path.basename(program_file).rstrip('.p4')
 
 def run_compile_bmv2(manifest):
+    compiler = manifest.target_config.get('compiler', 'p4c-bm2-ss')
+
     if 'run-before-compile' in manifest.target_config:
         commands = manifest.target_config['run-before-compile']
         if not isinstance(commands, list):
@@ -121,7 +128,7 @@ def run_compile_bmv2(manifest):
     output_file = get_program_name(manifest.program_file) + '.json'
     compiler_args.append('"%s"' % manifest.program_file)
     compiler_args.append('-o "%s"' % output_file)
-    rv = run_command('p4c-bm2-ss %s' % ' '.join(compiler_args))
+    rv = run_command('%s %s' % (compiler, ' '.join(compiler_args)))
 
     if 'run-after-compile' in manifest.target_config:
         commands = manifest.target_config['run-after-compile']
@@ -138,6 +145,8 @@ def run_compile_bmv2(manifest):
     return output_file
 
 def run_mininet(manifest):
+    print(manifest)
+
     output_file = run_compile_bmv2(manifest)
 
     # Run the program using the BMV2 Mininet simple switch.
@@ -187,7 +196,11 @@ def run_mininet(manifest):
     if 'switch-config' in manifest.target_config:
         switch_args.append('--switch-config "%s"' % manifest.target_config['switch-config'])
 
-    switch_args.append('--behavioral-exe "%s"' % 'simple_switch')
+    behavioral_exe = manifest.target_config.get('behavioral-exe', DEFAULT_BEHAVIORAL_EXE)
+    cli_path = manifest.target_config.get('cli-path', default_cli_path(behavioral_exe))
+
+    switch_args.append('--behavioral-exe "%s"' % behavioral_exe)
+    switch_args.append('--cli-path "%s"' % cli_path)
     switch_args.append('--json "%s"' % output_file)
 
     program = '"%s/mininet/single_switch_mininet.py"' % sys.path[0]
@@ -220,12 +233,12 @@ def run_multiswitch(manifest):
     if model == 'bmv2':
         if args.json: json_file = os.path.abspath(args.json)
         else:         json_file = run_compile_bmv2(manifest)
-        behavioral_exe = 'simple_switch'
-        switch_cli = 'simple_switch_CLI'
     else:
         log_error('Unrecognized model:', model)
         sys.exit(1)
 
+    behavioral_exe = manifest.target_config.get('behavioral-exe', DEFAULT_BEHAVIORAL_EXE)
+    cli_path = manifest.target_config.get('cli-path', default_cli_path(behavioral_exe))
     script_args = []
     script_args.append('--log-dir "/tmp/p4app_logs"')
     script_args.append('--manifest "%s"' % args.manifest)
@@ -233,7 +246,7 @@ def run_multiswitch(manifest):
     if 'auto-control-plane' in manifest.target_config and manifest.target_config['auto-control-plane']:
         script_args.append('--auto-control-plane' )
     script_args.append('--behavioral-exe "%s"' % behavioral_exe)
-    script_args.append('--cli-path "%s"' % switch_cli)
+    script_args.append('--cli-path "%s"' % cli_path)
     script_args.append('--json "%s"' % json_file)
 
     program = '"%s/mininet/multi_switch_mininet.py"' % sys.path[0]
@@ -260,12 +273,14 @@ def run_stf(manifest):
     return rv
 
 def run_custom(manifest):
+    behavioral_exe = manifest.target_config.get('behavioral-exe', DEFAULT_BEHAVIORAL_EXE)
+    cli_path = manifest.target_config.get('cli-path', default_cli_path(behavioral_exe))
     output_file = run_compile_bmv2(manifest)
     python_path = 'PYTHONPATH=$PYTHONPATH:/scripts/mininet/'
     script_args = []
-    script_args.append('--behavioral-exe "%s"' % 'simple_switch')
+    script_args.append('--behavioral-exe "%s"' % behavioral_exe)
     script_args.append('--json "%s"' % output_file)
-    script_args.append('--cli "%s"' % 'simple_switch_CLI')
+    script_args.append('--cli "%s"' % cli_path)
     if not 'program' in manifest.target_config:
          log_error('No mininet program file provided.')
          sys.exit(1)

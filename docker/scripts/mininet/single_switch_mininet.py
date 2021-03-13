@@ -41,6 +41,8 @@ parser.add_argument('--log-file', help='Path to write the switch log file',
                     type=str, action="store", required=False)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                    action="store_true")
+parser.add_argument('--cli-path', help='path to control utility for switch',
+                    type=str, action='store', required=False, default='simple_switch_CLI')
 parser.add_argument('--switch-config', help='simple_switch_CLI script to configure switch',
                     type=str, action="store", required=False, default=False)
 parser.add_argument('--cli-message', help='Message to print before starting CLI',
@@ -114,7 +116,7 @@ def main():
             switch_config = config_file.read()
 
         print "Configuring switch..."
-        proc = Popen(["simple_switch_CLI"], stdin=PIPE)
+        proc = Popen([args.cli_path], stdin=PIPE)
         proc.communicate(input=switch_config)
 
         print "Configuration complete."
