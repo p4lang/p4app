@@ -518,6 +518,12 @@ class P4RuntimeSwitch(P4Switch):
                 return counter.data.packet_count, counter.data.byte_count
 
     def readDirectCounter(self, table_name):
+        """
+        Reads the direct counter accociated with the specified table at the switch.
+        Returns the match values of each entry in the given table and the corresponding counter value.
+
+        :param table_name: the name of the table from the P4 program
+        """
         for response in self.sw_conn.ReadDirectCounters(self.p4info_helper.get_tables_id(table_name)):
             for entity in response.entities:
                 entry = entity.table_entry
