@@ -516,3 +516,13 @@ class P4RuntimeSwitch(P4Switch):
             for entity in response.entities:
                 counter = entity.counter_entry
                 return counter.data.packet_count, counter.data.byte_count
+
+    def readDirectCounter(self, table_name):
+        for response in self.sw_conn.ReadDirectCounters(self.p4info_helper.get_tables_id(table_name)):
+            for entity in response.entities:
+                entry = entity.table_entry
+                match_values = []
+                for m in entry.match:
+                    match_values.append(self.p4info_helper.get_match_field_value(m))
+                counter = entry.counter_data
+                yield match_values, counter.packet_count, counter.byte_count

@@ -164,6 +164,22 @@ class SwitchConnection(object):
             for response in self.client_stub.Read(request):
                 yield response
 
+    def ReadDirectCounters(self, table_id=None, dry_run=False):
+        request = p4runtime_pb2.ReadRequest()
+        request.device_id = self.device_id
+        entity = request.entities.add()
+        table_entry = entity.table_entry
+        if table_id is not None:
+            table_entry.table_id = table_id
+            table_entry.counter_data.byte_count = 1
+        else:
+            table_entry.table_id = 0
+        if dry_run:
+            print("P4Runtime Read:", request)
+        else:
+            for response in self.client_stub.Read(request):
+                yield response
+
 
 class GrpcRequestLogger(grpc.UnaryUnaryClientInterceptor,
                         grpc.UnaryStreamClientInterceptor):
