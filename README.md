@@ -156,6 +156,16 @@ while the switch is running using `readCounter()`. From
 packet_count, byte_count = s1.readCounter('ingressPortCounter', port)
 ```
 
+If your P4 program defines a direct counter associated with a table, you can read 
+it from the `main.py` script while the switch is running using `readDirectCounter()`.
+Note that the associated table name is used to read the counter values for all the 
+entries in the table. From [examples/counter.p4app](examples/counter.p4app/main.py):
+
+```
+for match_values, packet_count, byte_count \
+  in s1.readDirectCounter('MyIngress.egress_port_stats_counting_table'):
+```
+
 Configuring P4-14 Programs
 --------------------------
 

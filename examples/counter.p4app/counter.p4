@@ -25,6 +25,24 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
 
     counter(MAX_PORTS, CounterType.packets_and_bytes) ingressPortCounter;
+    direct_counter(CounterType.packets_and_bytes) egressPortDirectCounter;
+
+    action count_egress_spec () {
+        egressPortDirectCounter.count();
+    }
+
+    table egress_port_stats_counting_table {
+        key = {
+            standard_metadata.egress_spec :  exact;
+        }
+        actions = {
+            count_egress_spec;
+            NoAction;
+        }
+        counters = egressPortDirectCounter;
+        size = 64;
+        default_action = NoAction;
+    }
 
     apply {
 
@@ -34,6 +52,8 @@ control MyIngress(inout headers hdr,
             standard_metadata.egress_spec = 2;
         else
             standard_metadata.egress_spec = 1;
+
+        egress_port_stats_counting_table.apply();
     }
 }
 
