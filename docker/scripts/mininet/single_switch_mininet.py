@@ -42,9 +42,9 @@ parser.add_argument('--log-file', help='Path to write the switch log file',
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                    action="store_true")
 parser.add_argument('--switch-config', help='simple_switch_CLI script to configure switch',
-                    type=str, action="store", required=False, default=False)
+                    type=str, action="store", required=False, default=None)
 parser.add_argument('--cli-message', help='Message to print before starting CLI',
-                    type=str, action="store", required=False, default=False)
+                    type=str, action="store", required=False, default=None)
 
 args = parser.parse_args()
 
