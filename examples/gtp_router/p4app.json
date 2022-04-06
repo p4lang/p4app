@@ -1,0 +1,33 @@
+{
+  "program": "gtp_router.p4",
+  "language": "p4-16",
+  "targets": {
+    "multiswitch": {
+      "auto-control-plane": true,
+      "links": [
+        [
+          "h1",
+          "s1"
+        ],
+        [
+          "s1",
+          "h2"
+        ]
+      ],
+      "hosts": {
+        "h1": {
+          "ip": "10.0.1.10",
+          "cmd": "python3 gtp_gnb.py 10.0.2.10 $port $iface"
+        },
+        "h2": {
+          "ip": "10.0.2.10",
+          "cmd": "python3 gtp_upf.py $iface"
+        }
+      },
+      "parameters": {
+        "port": 2152,
+        "iface": "eth0"
+      }
+    }
+  }
+}
